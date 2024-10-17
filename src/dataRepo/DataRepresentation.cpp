@@ -107,9 +107,8 @@ bool DataRepresentation::loadFromDirectory(const string& dirPath, const string& 
  * Détermine le type de représentation (GFD, Yang, etc.) en fonction de la taille des descripteurs.
  */
 void DataRepresentation::determineRepresentationType() {
-    if (data.size() == 16) {
-        representationType = "E34";
-    } else if (data.size() == 18) {
+    // Supprimer la condition pour "E34"
+    if (data.size() == 18) {
         representationType = "Zernike7";
     } else if (data.size() == 100) {
         representationType = "GFD";

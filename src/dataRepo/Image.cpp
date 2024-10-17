@@ -63,8 +63,6 @@ bool Image::validateDescriptorsForType() const {
         return false;
     } else if (representationType == "Zernike7" && descripteurs.size() != 18) {
         return false;
-    } else if (representationType == "E34" && descripteurs.size() != 16) {
-        return false;
     } else if (representationType == "ART" && descripteurs.size() != 36) {
         return false;
     }
