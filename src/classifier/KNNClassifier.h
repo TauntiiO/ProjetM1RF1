@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "/home/user/Documents/M1/s1/ProjetM1RF1/src/dataRepo/Image.h"  
+#include "../dataRepo/Image.h"  
 
 class KNNClassifier {
     protected:

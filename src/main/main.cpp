@@ -3,10 +3,10 @@
 #include <string>
 #include <filesystem>
 #include <unordered_map>
-#include "/home/user/Documents/M1/s1/ProjetM1RF1/src/dataRepo/DataRepresentation.h"
-#include "/home/user/Documents/M1/s1/ProjetM1RF1/src/dataRepo/Image.h"
-#include "/home/user/Documents/M1/s1/ProjetM1RF1/src/dataRepo/DataCollection.h"
-#include "/home/user/Documents/M1/s1/ProjetM1RF1/src/classifier/KNNClassifier.h"
+#include "../dataRepo/DataRepresentation.h"
+#include "../dataRepo/Image.h"
+#include "../dataRepo/DataCollection.h"
+#include "../classifier/KNNClassifier.h"
 
 using namespace std;
 
