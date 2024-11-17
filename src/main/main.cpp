@@ -7,11 +7,12 @@
 #include "../dataRepo/Image.h"
 #include "../dataRepo/DataCollection.h"
 #include "../classifier/KNNClassifier.h"
+#include "../classifier/KMeans.h"
 
 using namespace std;
 
 int main() {
-    string representationsDir = "/home/user/Documents/M1/s1/ProjetM1RF1/data/=Signatures"; 
+    string representationsDir = "C:/M1/RF/ProjetM1RF1/data/=Signatures"; 
 
     // Charger le dataset
     DataCollection dataset;
@@ -21,7 +22,7 @@ int main() {
     // Créer un vecteur contenant les images du dataset
     vector<Image> images = dataset.getImages(); 
 
-    // conserve que celles dont le label est compris entre 1 et 10
+    // Conserver uniquement les images dont le label est compris entre 1 et 10
     vector<Image> filteredImages;
     for (const auto& img : images) {
         int label = img.getLabel();
@@ -29,13 +30,15 @@ int main() {
             filteredImages.push_back(img);
         }
     }
-    //k=4
-    KNNClassifier knn(filteredImages, 4, "euclidean");
+
+    // Partie 1 : Classification avec KNN
+    cout << "=== Classification avec KNN ===" << endl;
+    int kKNN = 4;
+    KNNClassifier knn(filteredImages, kKNN, "euclidean");
 
     int correctPredictions = 0;
     map<int, int> labelFrequency; 
 
-    // Boucle pour tester toutes les images filtrées
     for (const auto& img : filteredImages) {
         int predictedLabel = knn.predictLabel(img);
         int realLabel = img.getLabel();
@@ -57,8 +60,44 @@ int main() {
             maxCount = entry.second;
         }
     }
-    
     cout << "Le label le plus souvent reconnu est : " << mostRecognizedLabel << " avec " << maxCount << " prédictions." << endl;
+
+    // Partie 2 : Clustering avec K-Means
+
+    // Filtrer les images par type de descripteur (YANG, ART, GFD)
+    vector<Image> yangImages;
+    vector<Image> artImages;
+    vector<Image> gfdImages;
+
+    // Séparer les images en fonction du type de descripteur
+    for (const auto& img : filteredImages) {
+        if (img.getRepresentationType() == "Yang") {
+            yangImages.push_back(img);
+        } else if (img.getRepresentationType() == "ART") {
+            artImages.push_back(img);
+        } else if (img.getRepresentationType() == "GFD") {
+            gfdImages.push_back(img);
+        }
+    }
+
+    // Clustering pour les images Yang
+    cout << "=== Clustering avec K-Means sur les images Yang ===" << endl;
+    int kKMeans = 10;  // Nombre de clusters
+    KMeans kmeansYang(kKMeans);
+    kmeansYang.fit(yangImages);
+    kmeansYang.printClusters(yangImages);
+
+    // Clustering pour les images ART
+    cout << "=== Clustering avec K-Means sur les images ART ===" << endl;
+    KMeans kmeansArt(kKMeans);
+    kmeansArt.fit(artImages);
+    kmeansArt.printClusters(artImages);
+
+    // Clustering pour les images GFD
+    cout << "=== Clustering avec K-Means sur les images GFD ===" << endl;
+    KMeans kmeansGfd(kKMeans);
+    kmeansGfd.fit(gfdImages);
+    kmeansGfd.printClusters(gfdImages);
 
     return 0;
 }
