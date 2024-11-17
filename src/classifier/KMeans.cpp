@@ -78,7 +78,7 @@ double KMeans::euclideanDistance(const std::vector<double>& a, const std::vector
     return sqrt(sum);
 }
 
-void KMeans::printClusters() const {
+void KMeans::printClusters(const std::vector<Image>& images) const {
     for (int i = 0; i < k; ++i) {
         std::cout << "Cluster " << i << " : ";
         for (size_t j = 0; j < labels.size(); ++j) {
@@ -88,4 +88,39 @@ void KMeans::printClusters() const {
         }
         std::cout << std::endl;
     }
+    int totalCorrect = 0;
+    int totalImages = images.size();  // Nombre total d'images dans le dataset
+
+    // Parcourir chaque cluster
+    for (int i = 0; i < k; ++i) {
+        std::cout << "Cluster " << i << " : ";
+        
+        // Compter les fréquences des labels réels dans le cluster
+        std::unordered_map<int, int> labelCounts;
+        for (size_t j = 0; j < labels.size(); ++j) {
+            if (labels[j] == i) {  // Si l'image appartient au cluster i
+                int realLabel = images[j].getLabel();  // Récupérer le label réel de l'image
+                labelCounts[realLabel]++;  // Compter les occurrences de chaque label réel
+            }
+        }
+
+        // Trouver le label le plus fréquent dans ce cluster
+        int mostFrequentLabel = -1;
+        int maxCount = 0;
+        for (const auto& pair : labelCounts) {
+            if (pair.second > maxCount) {
+                mostFrequentLabel = pair.first;
+                maxCount = pair.second;
+            }
+        }
+
+        // Afficher le label le plus fréquent dans ce cluster
+        std::cout << "Label le plus fréquent : " << mostFrequentLabel << " avec " << maxCount << " occurrences." << std::endl;
+
+        // Ajouter les bonnes prédictions à la somme totale
+        totalCorrect += maxCount;
+    }
+    
+    // Afficher la statistique des prédictions correctes
+    std::cout << "Prédictions correctes : " << totalCorrect << " sur " << totalImages << std::endl;
 }
