@@ -28,6 +28,11 @@ class DataCollection {
 
 
         std::vector<Image> getImages() const;
+
+        void splitDataset(const std::vector<Image>& dataset, std::vector<Image>& trainSet, std::vector<Image>& testSet, float trainRatio = 0.8);
+        std::unordered_map<std::string, std::vector<Image>> groupImagesByRepresentation(const std::vector<Image>& images) const;
+
+
 };
 
 #endif 

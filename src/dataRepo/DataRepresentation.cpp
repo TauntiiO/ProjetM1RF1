@@ -2,7 +2,8 @@
 #include "DataRepresentation.h"
 #include "Image.h" 
 #include <fstream>
-#include <filesystem>
+#include <experimental/filesystem>
+namespace filesystem = std::experimental::filesystem;
 
 using namespace std;
 
@@ -20,8 +21,6 @@ DataRepresentation::DataRepresentation(const string& path) : filePath(path) {}
 */
 bool DataRepresentation::readFile() {
     data.clear();
-
-    cout << "Ouverture du fichier : " << filePath << endl;
     ifstream file(filePath);
     if (!file.is_open()) {
         cerr << "Erreur : Impossible d'ouvrir le fichier " << filePath << endl;
@@ -33,9 +32,8 @@ bool DataRepresentation::readFile() {
         data.push_back(value);
     }
 
-    cout << "Nombre de descripteurs lus : " << data.size() << endl;
     if (file.bad()) {
-        cerr << "Erreur lors de la lecture du fichier." << endl;
+        cerr << "Erreur lors de la lecture du fichier : " << filePath << endl;
         return false;
     }
 
@@ -43,6 +41,7 @@ bool DataRepresentation::readFile() {
     determineRepresentationType();
     return true;
 }
+
 
 /**
     * Renvoie le vecteur de descripteurs lu.
@@ -77,7 +76,7 @@ bool DataRepresentation::loadFromDirectory(const string& dirPath, const string& 
     unordered_map<string, int> sampleCounts;
 
     for (const auto& entry : filesystem::recursive_directory_iterator(dirPath)) {
-        if (entry.is_regular_file()) {
+        if (filesystem::is_regular_file(entry.path())) {
             string filename = entry.path().filename().string();
             if (filename == ".DS_Store") continue;
 
@@ -107,7 +106,7 @@ bool DataRepresentation::loadFromDirectory(const string& dirPath, const string& 
  * Détermine le type de représentation (GFD, Yang, etc.) en fonction de la taille des descripteurs.
  */
 void DataRepresentation::determineRepresentationType() {
-    // Supprimer la condition pour "E34"
+
     if (data.size() == 18) {
         representationType = "Zernike7";
     } else if (data.size() == 100) {
@@ -120,7 +119,6 @@ void DataRepresentation::determineRepresentationType() {
         cerr << "Type de descripteurs inconnu avec " << data.size() << " descripteurs." << endl;
         representationType = "UNKNOWN";
     }
-    cout << "Traitement du fichier avec type : " << representationType << endl;
 }
 
 /**

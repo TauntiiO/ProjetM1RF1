@@ -21,31 +21,29 @@ using namespace std;
  * - comparer deux images entre elles,
  */
 
+Image::Image() 
+    : descripteurs{}, label(0), representationType(""), imagePath("") {}
 
-Image::Image(const vector<double>& d, int l, const string& type, const string& path)
+Image::Image(const std::vector<double>& d, int l, const std::string& type, const std::string& path)
     : descripteurs(d), label(l), representationType(type), imagePath(path) {}
 
-//Pour obtenir le descripteurs
 const vector<double>& Image::getDescripteurs() const {
     return descripteurs;
 }
 
-//Pour obtenir le label
 int Image::getLabel() const {
     return label;
 }
 
-//Pour obtenir le type de rreprésentation
 const string& Image::getRepresentationType() const {
     return representationType;
 }
 
-//pour obtenir le chemin de l'image
 const string& Image::getImagePath() const {
     return imagePath;
 }
 
-//Verifie si le type de l'image correspond au type attendu
+//Verifie si le type de l'image correspond au type 
 bool Image::isValidRepresentation(const string& expectedType) const {
     return representationType == expectedType;
 }
@@ -55,7 +53,6 @@ bool Image::validateDescriptors(int expectedSize) const {
     return descripteurs.size() == expectedSize;
 }
 
-//Verifie que le nombre de descripteurs(la taille) correspond au type de descripteur
 bool Image::validateDescriptorsForType() const {
     if (representationType == "GFD" && descripteurs.size() != 100) {
         return false;
@@ -69,7 +66,6 @@ bool Image::validateDescriptorsForType() const {
     return true;
 }
 
-//Pour comparer deux images, d'abord selon leur label puis de leurs descripteurs, ensuite chemin
 bool Image::operator<(const Image& other) const {
     if (label != other.label) {
         return label < other.label;
@@ -90,20 +86,20 @@ bool Image::validateLabel(int minLabel, int maxLabel) const {
     return label >= minLabel && label <= maxLabel;
 }
 
-
 string Image::toString() const {
     ostringstream oss;
     oss << "Label : " << label 
-        << "\nType de descripteur : " << representationType 
-        << "\nChemin de l'image : " << imagePath 
-        << "\nNombre de descripteurs : " << descripteurs.size()
-        << "\nDescripteurs : ";
-    
-    oss << fixed << setprecision(4); 
-    for (size_t i = 0; i < descripteurs.size(); ++i) {
+        << ", Type : " << representationType 
+        << ", Descripteurs : ";
+
+    for (size_t i = 0; i < min(descripteurs.size(), size_t(5)); ++i) {
         oss << descripteurs[i] << " ";
-        if ((i + 1) % 10 == 0) oss << "\n";  
+    }
+    if (descripteurs.size() > 5) {
+        oss << "... (" << descripteurs.size() << " au total)";
     }
     return oss.str();
 }
+
+
 

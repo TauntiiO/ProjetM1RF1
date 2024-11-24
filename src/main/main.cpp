@@ -8,33 +8,55 @@
 #include "../dataRepo/DataCollection.h"
 #include "../classifier/KNNClassifier.h"
 #include "../classifier/KMeans.h"
+#include "../classifier/KNNClassifier.h"
 
 using namespace std;
 
 int main() {
-    string representationsDir = "C:/M1/RF/ProjetM1RF1/data/=Signatures"; 
-
-    // Charger le dataset
     DataCollection dataset;
-    dataset.loadDatasetFromDirectory(representationsDir); 
-    dataset.printDataset(); 
+    dataset.loadDatasetFromDirectory("/home/user/Documents/M1/s1/ProjetM1RF1/data/=Signatures");
+    dataset.printDataset();
 
-    // Créer un vecteur contenant les images du dataset
-    vector<Image> images = dataset.getImages(); 
+    vector<Image> images = dataset.getImages();
 
-    // Conserver uniquement les images dont le label est compris entre 1 et 10
     vector<Image> filteredImages;
     for (const auto& img : images) {
-        int label = img.getLabel();
-        if (label >= 1 && label <= 10) {
+        if (img.getLabel() >= 1 && img.getLabel() <= 10) {
             filteredImages.push_back(img);
         }
     }
 
+    auto groupedImages = dataset.groupImagesByRepresentation(filteredImages);
+
+    for (const auto& group : groupedImages) {
+        const string& representationType = group.first;
+        const vector<Image>& groupImages = group.second;
+
+        cout << "\n=== Calcul des distances pour la représentation : " << representationType << " ===" << endl;
+
+        KNNClassifier knn(groupImages, 3, "euclidean");
+
+        knn.calculateAndStoreDistances();
+
+        knn.printStoredDistances();
+    }
+        
+    /*
+    
+    // Trouver le k optimal pour KNN
+    cout << "=== Détermination du k optimal pour KNN ===" << endl;
+    int maxK = 10; // Tester jusqu'à k=10
+    int numFolds = 5; // Utiliser 5 folds pour la validation croisée
+
+    int optimalK = findOptimalKWithCrossValidation(filteredImages, "euclidean", maxK, numFolds);
+    cout << "Le k optimal est : " << optimalK << endl;
+
     // Partie 1 : Classification avec KNN
     cout << "=== Classification avec KNN ===" << endl;
-    int kKNN = 4;
-    KNNClassifier knn(filteredImages, kKNN, "euclidean");
+    int  KNN = 5;
+    KNNClassifier knn(filteredImages, optimalK, "euclidean");
+    // Vérifiez l'équilibre des classes
+    knn.checkClassBalance(filteredImages);
 
     int correctPredictions = 0;
     map<int, int> labelFrequency; 
@@ -100,4 +122,5 @@ int main() {
     kmeansGfd.printClusters(gfdImages);
 
     return 0;
+    */
 }

@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"    // Chemin d'inclusion pour IntelliSense
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++", // Chemin vers votre compilateur
+            "cStandard": "c11",
+            "cppStandard": "c++17",        // Utilisation de C++17
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": [
+                "-lstdc++fs"               // Argument pour la bibliothèque stdc++fs
+            ]
+        }
+    ],
+    "version": 4
+}
+
