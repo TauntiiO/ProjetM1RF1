@@ -9,10 +9,13 @@
 #include "../classifier/KNNClassifier.h"
 #include "../classifier/KMeans.h"
 #include "../classifier/KNNClassifier.h"
+#include "../evaluation/ConfusionMatrix.h"
+#include "../evaluation/Metrics.h"
 
 using namespace std;
 
 int main() {
+    //string representationsDir = "C:/M1/RF/ProjetM1RF1/data/=Signatures"; 
     DataCollection dataset;
     dataset.loadDatasetFromDirectory("/home/user/Documents/M1/s1/ProjetM1RF1/data/=Signatures");
     dataset.printDataset();
@@ -26,20 +29,67 @@ int main() {
         }
     }
 
-    auto groupedImages = dataset.groupImagesByRepresentation(filteredImages);
+    // Diviser les données en train/test (80% train, 20% test)
+    vector<Image> trainImages, testImages;
+    for (size_t i = 0; i < filteredImages.size(); ++i) {
+        if (i % 5 == 0) {
+            testImages.push_back(filteredImages[i]); // 20% des données pour test
+        } else {
+            trainImages.push_back(filteredImages[i]); // 80% des données pour entraînement
+        }
+    }
+
+    cout << "Train size: " << trainImages.size() << ", Test size: " << testImages.size() << endl;
+
+    auto groupedImages = dataset.groupImagesByRepresentation(trainImages);
+
+    double totalAccuracy = 0.0;
+    int totalTestedImages = 0;
 
     for (const auto& group : groupedImages) {
         const string& representationType = group.first;
-        const vector<Image>& groupImages = group.second;
+        const vector<Image>& groupTrainImages = group.second;
 
-        cout << "\n=== Calcul des distances pour la représentation : " << representationType << " ===" << endl;
+        cout << "\n=== Calcul des distances et classification pour la représentation : " << representationType << " ===" << endl;
 
-        KNNClassifier knn(groupImages, 3, "euclidean");
-
+        KNNClassifier knn(groupTrainImages, 3, "euclidean"); 
         knn.calculateAndStoreDistances();
+        knn.printStoredDistances(); 
 
-        knn.printStoredDistances();
+        ConfusionMatrix confusionMatrix(10);
+
+        int correctPredictions = 0;
+        int totalTestsForThisRepresentation = 0;
+
+        for (const auto& testImage : testImages) {
+            if (testImage.getRepresentationType() == representationType) {
+                int predictedLabel = knn.predictLabel(testImage); 
+                confusionMatrix.addPrediction(testImage.getLabel(), predictedLabel); 
+
+                if (predictedLabel == testImage.getLabel()) {
+                    correctPredictions++;
+                }
+
+                totalTestsForThisRepresentation++;
+            }
+        }
+
+        confusionMatrix.printMatrix();
+
+        cout << "\n=== Métriques pour la représentation " << representationType << " ===" << endl;
+        Metrics::printMetrics(confusionMatrix.getMatrix());
+
+     
+        double accuracy = static_cast<double>(correctPredictions) / totalTestsForThisRepresentation;
+        cout << "Précision pour la représentation " << representationType << " : " << accuracy * 100 << "%" << endl;
+        totalAccuracy += accuracy * totalTestsForThisRepresentation;
+        totalTestedImages += totalTestsForThisRepresentation;
     }
+
+    double globalAccuracy = totalAccuracy / totalTestedImages;
+    cout << "\n=== Résumé global ===" << endl;
+    cout << "Précision globale sur toutes les représentations : " << globalAccuracy * 100 << "%" << endl;
+
         
     /*
     

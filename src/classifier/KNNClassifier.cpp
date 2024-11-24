@@ -22,7 +22,6 @@ KNNClassifier::KNNClassifier(const vector<Image>& data, int kValue, const string
     }
 }
 
-
 double KNNClassifier::calculateDistance(const Image& img1, const Image& img2) const {
     const vector<double>& descriptors1 = img1.getDescripteurs();
     const vector<double>& descriptors2 = img2.getDescripteurs();
@@ -34,15 +33,21 @@ double KNNClassifier::calculateDistance(const Image& img1, const Image& img2) co
 
     double distance = 0.0;
 
-    for (size_t i = 0; i < descriptors1.size(); ++i) {
-        distance += pow(descriptors1[i] - descriptors2[i], 2);
+    if (distanceType == "euclidean") {
+        for (size_t i = 0; i < descriptors1.size(); ++i) {
+            distance += pow(descriptors1[i] - descriptors2[i], 2);
+        }
+        return sqrt(distance);
+    } else if (distanceType == "manhattan") {
+        for (size_t i = 0; i < descriptors1.size(); ++i) {
+            distance += abs(descriptors1[i] - descriptors2[i]);
+        }
+        return distance;
+    } else {
+        cerr << "Type de distance non reconnu : " << distanceType << endl;
+        throw invalid_argument("Type de distance non reconnu");
     }
-
-    return sqrt(distance);
 }
-
-
-
 
 vector<pair<double, int>> KNNClassifier::findKNearestNeighbors(const Image& queryImage) const {
     vector<pair<double, int>> distances;
@@ -54,46 +59,40 @@ vector<pair<double, int>> KNNClassifier::findKNearestNeighbors(const Image& quer
 
     sort(distances.begin(), distances.end());
 
-    cout << "=== Distances triées pour l'image query ===" << endl;
-    for (size_t i = 0; i < distances.size(); ++i) {
-        cout << "Distance: " << distances[i].first << ", Label: " << distances[i].second << endl;
-    }
-
-    return vector<pair<double, int>>(distances.begin(), distances.begin() + k);
+    return vector<pair<double, int>>(distances.begin(), min(distances.begin() + k, distances.end()));
 }
-
 
 int KNNClassifier::predictLabel(const Image& queryImage) const {
     vector<pair<double, int>> neighbors = findKNearestNeighbors(queryImage);
+
     unordered_map<int, int> labelVotes;
 
-    cout << "=== Voisins pour l'image query ===" << endl;
     for (const auto& neighbor : neighbors) {
-        cout << "Distance: " << neighbor.first << ", Label: " << neighbor.second << endl;
         labelVotes[neighbor.second]++;
     }
 
-    
     int predictedLabel = -1;
     int maxVotes = 0;
     for (const auto& vote : labelVotes) {
-        cout << "Label: " << vote.first << ", Votes: " << vote.second << endl;
         if (vote.second > maxVotes) {
             predictedLabel = vote.first;
             maxVotes = vote.second;
         }
     }
 
-
-    double confidence = static_cast<double>(maxVotes) / neighbors.size();
-    cout << "Prédiction finale : " << predictedLabel << ", Confiance : " << confidence * 100 << "%" << endl;
+    // Afficher la prédiction et la confiance
+    double confidence = static_cast<double>(maxVotes) / k;
+    cout << "Prédiction finale : " << predictedLabel
+         << ", Confiance : " << confidence * 100 << "%" << endl;
 
     return predictedLabel;
 }
 
+
 void KNNClassifier::setK(int kValue) {
     k = kValue;
 }
+
 
 void KNNClassifier::printDatasetInfo() const {
     if (dataset.empty()) {
@@ -107,22 +106,18 @@ void KNNClassifier::printDatasetInfo() const {
     cout << "====================================" << endl;
 }
 
-
 void KNNClassifier::checkClassBalance(const std::vector<Image>& data) {
     unordered_map<int, int> labelCounts;
 
-    
     for (const auto& img : data) {
         labelCounts[img.getLabel()]++;
     }
-
     cout << "=== Répartition des classes dans le dataset ===" << endl;
     for (const auto& entry : labelCounts) {
         cout << "Label " << entry.first << ": " << entry.second << " instances" << endl;
     }
     cout << "==============================================" << endl;
 }
-
 
 void KNNClassifier::calculateAndStoreDistances() {
     distancesByRepresentationAndLabel.clear();
@@ -132,26 +127,19 @@ void KNNClassifier::calculateAndStoreDistances() {
         labelToImages[img.getLabel()].push_back(img);
     }
 
-    for (const auto& entry : labelToImages) {
+    for (auto& entry : labelToImages) {
         int label = entry.first;
-        const auto& imagesWithLabel = entry.second;
+        vector<Image>& imagesWithLabel = entry.second;
 
         if (imagesWithLabel.empty()) continue;
+        sort(imagesWithLabel.begin(), imagesWithLabel.end(), [](const Image& a, const Image& b) {
+            return a.getImagePath() < b.getImagePath();
+        });
+        const Image& referenceImage = imagesWithLabel[0];
 
-        const Image* referenceImage = nullptr;
+        string representationType = referenceImage.getRepresentationType();
         for (const auto& img : imagesWithLabel) {
-            if (img.getImagePath().find("n001") != string::npos) {
-                referenceImage = &img;
-                break;
-            }
-        }
-        if (!referenceImage) {
-            referenceImage = &imagesWithLabel[0];
-        }
-
-        string representationType = referenceImage->getRepresentationType();
-        for (const auto& img : imagesWithLabel) {
-            double distance = calculateDistance(*referenceImage, img);
+            double distance = calculateDistance(referenceImage, img);
             distancesByRepresentationAndLabel[representationType][label].emplace_back(img.getImagePath(), distance);
         }
     }
@@ -166,10 +154,11 @@ void KNNClassifier::printStoredDistances() const {
             int label = labelEntry.first;
             const auto& distances = labelEntry.second;
 
-            cout << "\n=== Label : " << label << " ===" << endl;
+            cout << "Classe " << label << ": [ ";
             for (const auto& distPair : distances) {
-                cout << "Image : " << distPair.first << ", Distance : " << distPair.second << endl;
+                cout << distPair.second << " "; 
             }
+            cout << "]" << endl;
         }
     }
 }

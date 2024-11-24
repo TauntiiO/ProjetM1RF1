@@ -1,0 +1,296 @@
+=== Résumé du chargement ===
+Total des images chargées : 480
+Extension .yng : 120 fichiers
+Extension .art : 120 fichiers
+Extension .gfd : 120 fichiers
+Extension .txt : 120 fichiers
+============================
+============================
+=== Résumé du chargement ===
+Total des images chargées : 480
+Type de représentation Zernike7 : 120 fichiers (2160 descripteurs au total, 18 par fichier)
+Type de représentation Yang : 120 fichiers (3480 descripteurs au total, 29 par fichier)
+Type de représentation GFD : 120 fichiers (12000 descripteurs au total, 100 par fichier)
+Type de représentation ART : 120 fichiers (4320 descripteurs au total, 36 par fichier)
+--- Répartition par labels ---
+Label 10 : 48 fichiers
+Label 9 : 48 fichiers
+Label 8 : 48 fichiers
+Label 7 : 48 fichiers
+Label 6 : 48 fichiers
+Label 5 : 48 fichiers
+Label 4 : 48 fichiers
+Label 3 : 48 fichiers
+Label 2 : 48 fichiers
+Label 1 : 48 fichiers
+--- Total des descripteurs ---
+Nombre total de descripteurs (toutes représentations confondues) : 21960
+============================
+Train size: 384, Test size: 96
+
+=== Calcul des distances et classification pour la représentation : Zernike7 ===
+
+=== Distances pour la représentation : Zernike7 ===
+Classe 1: [ 0 3278.34 2961.78 4283.46 4706 5014.13 4861 5464.46 5060.6 3537.22 ]
+Classe 2: [ 0 2082.18 1416.84 2050.57 4361.96 6095.34 1736.54 8461.67 3317.08 ]
+Classe 3: [ 0 653.194 3154.69 1277.02 3507.44 2394.85 2348.76 624.285 3015.47 3522.65 ]
+Classe 4: [ 0 3619.86 3959.35 3332.1 3982.19 4185.96 4096.79 3733.61 3632.57 ]
+Classe 5: [ 0 907.62 1147.21 1302.43 1084.08 1259.95 1548.14 821.814 804.165 771.442 ]
+Classe 6: [ 0 446.817 470.532 430.739 117.103 218.019 176.487 287.068 440.169 649.297 ]
+Classe 7: [ 0 1424.42 2360.89 2371.86 286.206 1289.62 2261.62 2652.35 17.1641 ]
+Classe 8: [ 0 2096.6 2627.41 2780.25 3794.08 2105.22 6825.76 1171.76 2781.66 4350.59 ]
+Classe 9: [ 0 246.625 450.339 1176.98 1310.08 1002.51 318.416 592.658 492.844 ]
+Classe 10: [ 0 7246.31 7375.07 6219.36 10906.2 4525.45 6802.09 7028.11 6714.5 4654.59 ]
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 2, Confiance : 66.6667%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 4, Confiance : 100%
+Prédiction finale : 4, Confiance : 100%
+Prédiction finale : 4, Confiance : 66.6667%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 8, Confiance : 100%
+Prédiction finale : 8, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 10, Confiance : 100%
+
+=== Confusion Matrix ===
+2 0 0 0 0 0 0 0 0 0 
+0 3 0 0 0 0 0 0 0 0 
+0 0 2 0 0 0 0 0 0 0 
+0 0 0 3 0 0 0 0 0 0 
+0 0 0 0 2 0 0 0 0 0 
+0 0 0 0 0 2 0 0 0 0 
+0 0 0 0 0 0 3 0 0 0 
+0 0 0 0 0 0 0 2 0 0 
+0 0 0 0 0 0 0 0 3 0 
+0 0 0 0 0 0 1 0 0 1 
+
+=== Métriques pour la représentation Zernike7 ===
+
+=== Metrics ===
+Accuracy: 95.8333%
+Class 1: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 2: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 3: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 4: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 5: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 6: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 7: Precision = 75%, Recall = 100%, F1-Score = 85.7143%
+Class 8: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 9: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 10: Precision = 100%, Recall = 50%, F1-Score = 66.6667%
+Précision pour la représentation Zernike7 : 95.8333%
+
+=== Calcul des distances et classification pour la représentation : Yang ===
+
+=== Distances pour la représentation : Yang ===
+Classe 1: [ 0 0.0529529 0.0366415 0.0400859 0.043604 0.0457854 0.0438612 0.0328033 0.0435707 0.0240545 ]
+Classe 2: [ 0 0.0256167 0.0269373 0.0369214 0.109417 0.170306 0.0440247 0.108347 0.0283189 0.0303239 ]
+Classe 3: [ 0 0.0425001 0.0783151 0.0311225 0.0196268 0.0206541 0.0275992 0.0439479 0.0701048 0.0413539 0.0328995 ]
+Classe 4: [ 0 0.0147335 0.0408018 0.0361019 0.0366321 0.0253674 0.0293576 0.0414433 0.0497744 0.022266 ]
+Classe 5: [ 0 0.0406024 0.0459028 0.0528275 0.0343269 0.0410201 0.0808051 0.0492711 0.0533666 ]
+Classe 6: [ 0 0.0784962 0.0439212 0.0275656 0.0212616 0.0371355 0.0571949 0.0679259 0.0306293 ]
+Classe 7: [ 0 0.122303 0.138376 0.00699341 0.106538 0.0334396 0.0536006 0.0770512 0.00537875 ]
+Classe 8: [ 0 0.0203908 0.0277326 0.0319914 0.0384661 0.0438915 0.024773 0.0286146 0.0167215 0.0402123 ]
+Classe 9: [ 0 0.0617496 0.0417809 0.071792 0.0125034 0.0497282 0.0415382 0.0647353 0.0665088 0.070247 ]
+Classe 10: [ 0 0.0423783 0.0706625 0.0209441 0.0622843 0.0787521 0.0841877 0.021346 0.037983 0.00934564 ]
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 4, Confiance : 66.6667%
+Prédiction finale : 4, Confiance : 66.6667%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 7, Confiance : 66.6667%
+Prédiction finale : 3, Confiance : 66.6667%
+Prédiction finale : 8, Confiance : 66.6667%
+Prédiction finale : 8, Confiance : 66.6667%
+Prédiction finale : 5, Confiance : 66.6667%
+Prédiction finale : 9, Confiance : 66.6667%
+Prédiction finale : 10, Confiance : 66.6667%
+Prédiction finale : 10, Confiance : 100%
+
+=== Confusion Matrix ===
+2 0 0 0 0 0 0 0 0 0 
+0 2 0 0 0 0 0 0 0 0 
+0 0 1 0 0 0 0 0 0 0 
+0 0 0 2 0 0 0 0 0 0 
+0 0 0 0 3 0 0 0 0 0 
+0 0 0 0 0 3 0 0 0 0 
+0 0 1 0 0 0 2 0 0 0 
+0 0 0 0 0 0 0 2 0 0 
+0 0 0 0 1 0 0 0 1 0 
+0 0 0 0 0 0 0 0 0 2 
+
+=== Métriques pour la représentation Yang ===
+
+=== Metrics ===
+Accuracy: 90.9091%
+Class 1: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 2: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 3: Precision = 50%, Recall = 100%, F1-Score = 66.6667%
+Class 4: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 5: Precision = 75%, Recall = 100%, F1-Score = 85.7143%
+Class 6: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 7: Precision = 100%, Recall = 66.6667%, F1-Score = 80%
+Class 8: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 9: Precision = 100%, Recall = 50%, F1-Score = 66.6667%
+Class 10: Precision = 100%, Recall = 100%, F1-Score = 100%
+Précision pour la représentation Yang : 90.9091%
+
+=== Calcul des distances et classification pour la représentation : GFD ===
+
+=== Distances pour la représentation : GFD ===
+Classe 1: [ 0 0.29989 0.409614 0.414812 0.418054 0.415456 0.385128 0.390975 0.382337 ]
+Classe 2: [ 0 0.136474 0.111794 0.171967 0.117624 0.370565 0.481429 0.147975 0.36488 0.382307 ]
+Classe 3: [ 0 0.202024 0.143107 0.252461 0.181506 0.0626891 0.208352 0.196702 ]
+Classe 4: [ 0 0.273932 0.239747 0.228233 0.26795 0.279263 0.292081 0.257756 0.23121 0.259353 ]
+Classe 5: [ 0 0.122143 0.11385 0.109235 0.0961227 0.10237 0.111748 0.121536 0.10589 0.0971387 ]
+Classe 6: [ 0 0.0798478 0.0504184 0.0799299 0.0273484 0.0505352 0.0696635 0.0599652 0.0966293 0.0915697 ]
+Classe 7: [ 0 0.140769 0.140474 0.144435 0.0342479 0.148683 0.134552 0.194191 0.224061 0.00611461 ]
+Classe 8: [ 0 0.215847 0.243681 0.291324 0.178776 0.144644 0.236197 0.237985 0.269713 ]
+Classe 9: [ 0 0.030992 0.0377235 0.0767584 0.0933776 0.101467 0.0717757 0.0516886 0.0578552 0.054381 ]
+Classe 10: [ 0 0.42553 0.366635 0.356771 0.789121 0.397032 0.529609 0.315388 0.271598 0.332875 ]
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 1, Confiance : 66.6667%
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 8, Confiance : 66.6667%
+Prédiction finale : 4, Confiance : 100%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 8, Confiance : 100%
+Prédiction finale : 8, Confiance : 100%
+Prédiction finale : 8, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 10, Confiance : 100%
+Prédiction finale : 7, Confiance : 66.6667%
+
+=== Confusion Matrix ===
+3 0 0 0 0 0 0 0 0 0 
+0 2 0 0 0 0 0 0 0 0 
+0 0 4 0 0 0 0 0 0 0 
+0 0 0 1 0 0 0 1 0 0 
+0 0 0 0 2 0 0 0 0 0 
+0 0 0 0 0 2 0 0 0 0 
+0 0 0 0 0 0 2 0 0 0 
+0 0 0 0 0 0 0 3 0 0 
+0 0 0 0 0 0 0 0 2 0 
+0 0 0 0 0 0 1 0 0 1 
+
+=== Métriques pour la représentation GFD ===
+
+=== Metrics ===
+Accuracy: 91.6667%
+Class 1: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 2: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 3: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 4: Precision = 100%, Recall = 50%, F1-Score = 66.6667%
+Class 5: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 6: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 7: Precision = 66.6667%, Recall = 100%, F1-Score = 80%
+Class 8: Precision = 75%, Recall = 100%, F1-Score = 85.7143%
+Class 9: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 10: Precision = 100%, Recall = 50%, F1-Score = 66.6667%
+Précision pour la représentation GFD : 91.6667%
+
+=== Calcul des distances et classification pour la représentation : ART ===
+
+=== Distances pour la représentation : ART ===
+Classe 1: [ 0 0.300779 0.357888 0.409178 0.38125 0.395744 0.394578 0.395387 0.330237 ]
+Classe 2: [ 0 0.0750695 0.12779 0.190748 0.0973206 0.252549 0.258781 0.275229 0.333681 ]
+Classe 3: [ 0 0.203215 0.0629948 0.233174 0.10942 0.261412 0.0421505 0.177449 0.212109 0.195529 ]
+Classe 4: [ 0 0.270375 0.297394 0.218741 0.284114 0.220746 0.265587 0.266364 0.296078 ]
+Classe 5: [ 0 0.0778029 0.0575943 0.0633489 0.0614539 0.0690761 0.0761579 0.0889964 0.0537238 0.0616078 ]
+Classe 6: [ 0 0.0130435 0.0535811 0.0317733 0.0394443 0.0442202 0.0397988 0.0548266 0.0497534 ]
+Classe 7: [ 0 0.101155 0.102207 0.131467 0.16398 0.0829557 0.0268268 0.132855 0.183211 0.0030883 ]
+Classe 8: [ 0 0.25427 0.264471 0.13282 0.161853 0.365645 0.10759 0.28769 0.197101 0.183953 ]
+Classe 9: [ 0 0.0220614 0.0239222 0.0491947 0.068833 0.0470011 0.02497 0.0280977 0.0363347 ]
+Classe 10: [ 0 0.469713 0.503622 0.697252 0.324543 0.319674 0.700284 0.445596 0.265912 ]
+Prédiction finale : 1, Confiance : 66.6667%
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 1, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 2, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 3, Confiance : 100%
+Prédiction finale : 8, Confiance : 66.6667%
+Prédiction finale : 4, Confiance : 66.6667%
+Prédiction finale : 4, Confiance : 100%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 5, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 6, Confiance : 100%
+Prédiction finale : 7, Confiance : 100%
+Prédiction finale : 5, Confiance : 66.6667%
+Prédiction finale : 8, Confiance : 100%
+Prédiction finale : 8, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 9, Confiance : 100%
+Prédiction finale : 10, Confiance : 100%
+Prédiction finale : 10, Confiance : 100%
+Prédiction finale : 10, Confiance : 100%
+
+=== Confusion Matrix ===
+3 0 0 0 0 0 0 0 0 0 
+0 3 0 0 0 0 0 0 0 0 
+0 0 2 0 0 0 0 0 0 0 
+0 0 0 2 0 0 0 1 0 0 
+0 0 0 0 2 0 0 0 0 0 
+0 0 0 0 0 3 0 0 0 0 
+0 0 0 0 1 0 1 0 0 0 
+0 0 0 0 0 0 0 2 0 0 
+0 0 0 0 0 0 0 0 3 0 
+0 0 0 0 0 0 0 0 0 3 
+
+=== Métriques pour la représentation ART ===
+
+=== Metrics ===
+Accuracy: 92.3077%
+Class 1: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 2: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 3: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 4: Precision = 100%, Recall = 66.6667%, F1-Score = 80%
+Class 5: Precision = 66.6667%, Recall = 100%, F1-Score = 80%
+Class 6: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 7: Precision = 100%, Recall = 50%, F1-Score = 66.6667%
+Class 8: Precision = 66.6667%, Recall = 100%, F1-Score = 80%
+Class 9: Precision = 100%, Recall = 100%, F1-Score = 100%
+Class 10: Precision = 100%, Recall = 100%, F1-Score = 100%
+Précision pour la représentation ART : 92.3077%
+
+=== Résumé global ===
+Précision globale sur toutes les représentations : 92.7083%
