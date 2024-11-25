@@ -17,7 +17,8 @@ using namespace std;
 int main() {
     //string representationsDir = "C:/M1/RF/ProjetM1RF1/data/=Signatures"; 
     DataCollection dataset;
-    dataset.loadDatasetFromDirectory("/home/user/Documents/M1/s1/ProjetM1RF1/data/=Signatures");
+    //dataset.loadDatasetFromDirectory("/home/user/Documents/M1/s1/ProjetM1RF1/data/=Signatures");
+    dataset.loadDatasetFromDirectory("C:/M1/RF/ProjetM1RF1/data/=Signatures");
     dataset.printDataset();
 
     vector<Image> images = dataset.getImages();
@@ -90,6 +91,86 @@ int main() {
     cout << "\n=== Résumé global ===" << endl;
     cout << "Précision globale sur toutes les représentations : " << globalAccuracy * 100 << "%" << endl;
 
+    // Partie 2 : Clustering avec KMeans
+    // Filtrer les images par type de descripteur (ART, Yang, Zernike7, GFD, E34)
+    vector<Image> yangImages, artImages, gfdImages, zernike7Images, e34Images;
+
+    // Séparer les images en fonction du type de descripteur
+    for (const auto& img : filteredImages) {
+        if (img.getRepresentationType() == "Yang") {
+            yangImages.push_back(img);
+        } else if (img.getRepresentationType() == "ART") {
+            artImages.push_back(img);
+        } else if (img.getRepresentationType() == "GFD") {
+            gfdImages.push_back(img);
+        } else if (img.getRepresentationType() == "Zernike7") {
+            zernike7Images.push_back(img);
+        } else if (img.getRepresentationType() == "E34") {
+            e34Images.push_back(img);
+        }
+    }
+
+    // Appliquer K-Means sur chaque type de descripteur
+    vector<pair<string, vector<Image>>> descriptorGroups = {
+        {"Yang", yangImages},
+        {"ART", artImages},
+        {"GFD", gfdImages},
+        {"Zernike7", zernike7Images},
+        {"E34", e34Images}
+    };
+
+    double totalAccuracyKMeans = 0.0;
+    int totalTestedImagesKMeans = 0;
+
+    // Pour chaque descripteur
+    for (const auto& group : descriptorGroups) {
+        const string& representationType = group.first;
+        const vector<Image>& groupTrainImages = group.second;
+
+        if (groupTrainImages.empty()) continue;
+
+        cout << "\n=== Clustering avec K-Means pour la représentation : " << representationType << " ===" << endl;
+
+        KMeans kmeans(10);  // Nombre de clusters pour KMeans
+        kmeans.fit(groupTrainImages);  // Entraîner sur les données d'entraînement
+
+        ConfusionMatrix kmeansConfusionMatrix(10); // Matrix de confusion pour 10 classes
+        int correctPredictions = 0;
+        int testImagesForThisRepresentation = 0;
+
+        // Appliquer KMeans et calculer la matrice de confusion pour ce descripteur
+        for (const auto& testImage : testImages) {
+            if (testImage.getRepresentationType() == representationType) {
+                int predictedCluster = kmeans.predictCluster(testImage);
+                kmeansConfusionMatrix.addPrediction(testImage.getLabel(), predictedCluster);
+
+                // Calcul des prédictions correctes pour ce descripteur
+                if (predictedCluster == testImage.getLabel()) {
+                    correctPredictions++;
+                }
+                testImagesForThisRepresentation++;
+            }
+        }
+
+        kmeansConfusionMatrix.printMatrix(); // Afficher la matrice de confusion
+
+        cout << "\n=== Métriques pour K-Means avec " << representationType << " ===" << endl;
+        Metrics::printMetrics(kmeansConfusionMatrix.getMatrix());  // Afficher les métriques
+
+        // Calcul de la précision pour ce descripteur
+        double accuracy = correctPredictions / (double)testImagesForThisRepresentation;
+        cout << "Précision pour le descripteur " << representationType << " : " << accuracy * 100 << "%" << endl;
+
+        totalAccuracyKMeans += accuracy * testImagesForThisRepresentation;
+        totalTestedImagesKMeans += testImagesForThisRepresentation;
+    }
+
+    // Calcul de la précision globale
+    double globalAccuracyKMeans = totalAccuracyKMeans / totalTestedImagesKMeans;
+    cout << "\n=== Résumé global ===" << endl;
+    cout << "Précision globale sur toutes les représentations : " << globalAccuracyKMeans * 100 << "%" << endl;
+
+    return 0;
         
     /*
     
