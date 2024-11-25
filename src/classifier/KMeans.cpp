@@ -5,25 +5,26 @@ KMeans::KMeans(int k) : k(k) {
 }
 
 void KMeans::fit(const std::vector<Image>& images) {
-    // Initialiser les centroids aléatoirement
     initializeCentroids(images);
     
     bool changed;
     do {
         changed = false;
-        // Étape 2 : Assignation des clusters
         assignClusters(images);
         
-        // Étape 3 : Mise à jour des centroids
         for (int i = 0; i < k; ++i) {
             std::vector<double> newCentroid = updateCentroid(images, i);
             if (newCentroid != centroids[i]) {
                 centroids[i] = newCentroid;
-                changed = true;  // Un centroid a changé
+                changed = true;
             }
         }
-    } while (changed);  // Répéter jusqu'à ce qu'il n'y ait plus de changement
+    } while (changed);
+    
+    // Mise à jour des labels dominants pour chaque cluster
+    updateClusterLabels(images);
 }
+
 
 void KMeans::initializeCentroids(const std::vector<Image>& images) {
     // Choisir k centroids aléatoires à partir des images
@@ -124,3 +125,48 @@ void KMeans::printClusters(const std::vector<Image>& images) const {
     // Afficher la statistique des prédictions correctes
     std::cout << "Prédictions correctes : " << totalCorrect << " sur " << totalImages << std::endl;
 }
+
+void KMeans::updateClusterLabels(const std::vector<Image>& images) {
+    clusterLabels.resize(k, -1);  // Initialiser les labels des clusters
+    
+    for (int i = 0; i < k; ++i) {
+        std::unordered_map<int, int> labelCounts;  // Compteur de labels pour le cluster i
+        
+        for (size_t j = 0; j < labels.size(); ++j) {
+            if (labels[j] == i) {  // Si l'image appartient au cluster i
+                int realLabel = images[j].getLabel();  // Récupérer le label réel
+                labelCounts[realLabel]++;  // Incrémenter le compteur pour ce label
+            }
+        }
+        
+        // Trouver le label dominant pour ce cluster
+        int mostFrequentLabel = -1;
+        int maxCount = 0;
+        for (const auto& pair : labelCounts) {
+            if (pair.second > maxCount) {
+                mostFrequentLabel = pair.first;
+                maxCount = pair.second;
+            }
+        }
+        
+        clusterLabels[i] = mostFrequentLabel;  // Associer le label dominant au cluster
+    }
+}
+
+int KMeans::predictCluster(const Image& image) {
+    double minDistance = std::numeric_limits<double>::max();
+    int bestCluster = -1;
+
+    for (int i = 0; i < k; ++i) {
+        double distance = euclideanDistance(image.getDescripteurs(), centroids[i]);
+        if (distance < minDistance) {
+            minDistance = distance;
+            bestCluster = i;
+        }
+    }
+    
+    // Retourner le label associé au cluster
+    return clusterLabels[bestCluster];
+}
+
+
