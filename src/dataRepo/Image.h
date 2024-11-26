@@ -17,6 +17,8 @@ public:
     Image(const std::vector<double>& descripteurs, int label, const std::string& type, const std::string& path);
 
     const std::vector<double>& getDescripteurs() const;
+    void setDescripteurs(const std::vector<double>& newDescripteurs);
+
     int getLabel() const;
     const std::string& getRepresentationType() const;
     const std::string& getImagePath() const;

@@ -30,6 +30,74 @@ int main() {
         }
     }
 
+    // Normalisation Min Max
+    std::unordered_map<std::string, std::vector<Image>> representationGroupedImages;
+    for (const auto& img : filteredImages) {
+        representationGroupedImages[img.getRepresentationType()].push_back(img);
+    }
+
+    // Stockage final pour les images normalisées
+    std::vector<Image> normalizedImages;
+
+    // Parcourir chaque groupe pour normalisation
+    for (auto& group : representationGroupedImages) {
+        const std::string& representationType = group.first;
+        std::vector<Image>& images = group.second;
+
+        // Vérifier que le groupe n'est pas vide
+        if (images.empty()) {
+            cout << "Aucune image trouvée pour la représentation : " << representationType << endl;
+            continue;
+        }
+
+        // Taille des descripteurs pour ce groupe
+        size_t numDescriptors = images[0].getDescripteurs().size();
+        if (numDescriptors == 0) {
+            cout << "Erreur : Les descripteurs sont vides pour la représentation : " << representationType << endl;
+            continue;
+        }
+
+        // Calcul des min et max pour chaque dimension
+        std::vector<double> minValues(numDescriptors, std::numeric_limits<double>::max());
+        std::vector<double> maxValues(numDescriptors, std::numeric_limits<double>::lowest());
+
+        for (const auto& img : images) {
+            const auto& descripteurs = img.getDescripteurs();
+            if (descripteurs.size() != numDescriptors) {
+                cout << "Erreur : Taille incohérente des descripteurs dans une image du groupe " << representationType << endl;
+                continue;
+            }
+            for (size_t i = 0; i < descripteurs.size(); ++i) {
+                minValues[i] = std::min(minValues[i], descripteurs[i]);
+                maxValues[i] = std::max(maxValues[i], descripteurs[i]);
+            }
+        }
+
+        // Normaliser les descripteurs pour ce groupe
+        for (auto& img : images) {
+            const auto& descripteurs = img.getDescripteurs();
+            std::vector<double> normalizedDescriptors(numDescriptors, 0.0);
+
+            for (size_t i = 0; i < descripteurs.size(); ++i) {
+                if (maxValues[i] != minValues[i]) {
+                    normalizedDescriptors[i] = (descripteurs[i] - minValues[i]) / (maxValues[i] - minValues[i]);
+                } else {
+                    normalizedDescriptors[i] = 0.0; // Si min == max
+                }
+            }
+
+            img.setDescripteurs(normalizedDescriptors); // Mettre à jour les descripteurs normalisés
+        }
+
+        // Ajouter les images normalisées au stockage final
+        normalizedImages.insert(normalizedImages.end(), images.begin(), images.end());
+    }
+
+    // Remettre à jour filteredImages avec les données normalisées
+    filteredImages = std::move(normalizedImages);
+
+    cout << "Normalisation terminée pour toutes les représentations." << endl;
+
     // Diviser les données en train/test (80% train, 20% test)
     vector<Image> trainImages, testImages;
     for (size_t i = 0; i < filteredImages.size(); ++i) {

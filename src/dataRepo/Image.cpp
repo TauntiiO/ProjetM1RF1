@@ -31,6 +31,10 @@ const vector<double>& Image::getDescripteurs() const {
     return descripteurs;
 }
 
+void Image::setDescripteurs(const std::vector<double>& newDescripteurs) {
+    descripteurs = newDescripteurs;
+}
+
 int Image::getLabel() const {
     return label;
 }
