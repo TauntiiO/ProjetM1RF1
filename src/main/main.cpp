@@ -21,7 +21,7 @@ std::string getProjectRootDir(const char* argv0) {
     try {
         fs::path execPath = fs::path(argv0);
         if (!execPath.is_absolute()) {
-            execPath = fs::current_path() / execPath; 
+            execPath = fs::current_path() / execPath;
         }
         execPath = execPath.parent_path().parent_path();
         if (!fs::exists(execPath)) {
@@ -35,6 +35,7 @@ std::string getProjectRootDir(const char* argv0) {
     }
 }
 
+// Créer k folds
 vector<vector<Image>> createKFolds(const vector<Image>& data, int k) {
     vector<vector<Image>> folds(k);
     vector<Image> shuffledData = data;
@@ -46,6 +47,21 @@ vector<vector<Image>> createKFolds(const vector<Image>& data, int k) {
         folds[i % k].push_back(shuffledData[i]);
     }
     return folds;
+}
+
+// Nouvelle fonction pour stocker les scores de précision/rappel pour K=12
+void savePRData(const std::string& filename, const std::vector<int>& trueLabels, const std::vector<double>& confidenceScores) {
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Erreur : Impossible d'ouvrir le fichier pour sauvegarder les données PR." << std::endl;
+        return;
+    }
+    outFile << "TrueLabel,ConfidenceScore\n";
+    for (size_t i = 0; i < trueLabels.size(); ++i) {
+        outFile << trueLabels[i] << "," << confidenceScores[i] << "\n";
+    }
+    outFile.close();
+    std::cout << "Données PR sauvegardées dans : " << filename << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -71,12 +87,16 @@ int main(int argc, char* argv[]) {
 
     string confusionDir = "results/confusion_matrices";
     string metricsDir = "results/metrics";
+    string prDataDir = "results/precision_recall_data";
 
     if (!fs::exists(confusionDir)) {
         fs::create_directories(confusionDir);
     }
     if (!fs::exists(metricsDir)) {
         fs::create_directories(metricsDir);
+    }
+    if (!fs::exists(prDataDir)) {
+        fs::create_directories(prDataDir);
     }
 
     for (const auto& representationDir : representationDirs) {
@@ -135,7 +155,7 @@ int main(int argc, char* argv[]) {
         normalizeDescriptors(trainImages);
         normalizeDescriptors(testImages);
 
-        KNNClassifier knn(trainImages, 1, "euclidean"); 
+        KNNClassifier knn(trainImages, 1, "euclidean");
         ConfusionMatrix confusionMatrix(10);
 
         for (const auto& testImage : testImages) {
@@ -151,9 +171,25 @@ int main(int argc, char* argv[]) {
 
         string metricsCSV = metricsDir + "/" + representationName + "_metrics.csv";
         Metrics::calculateMetricsFromCSV(confusionCSV, metricsCSV);
+
+        int kFixed = 12;
+        KNNClassifier knnWithFixedK(trainImages, kFixed, "euclidean");
+        vector<int> prTrueLabels;
+        vector<double> prConfidenceScores;
+
+        for (const auto& testImage : testImages) {
+            int predictedLabel;
+            double confidenceScore;
+            tie(predictedLabel, confidenceScore) = knnWithFixedK.predictLabelWithConfidence(testImage);
+            prTrueLabels.push_back(testImage.getLabel());
+            prConfidenceScores.push_back(confidenceScore);
+        }
+
+        string prFilename = prDataDir + "/" + representationName + "_pr_data.csv";
+        savePRData(prFilename, prTrueLabels, prConfidenceScores);
     }
 
-    cout << "Toutes les matrices de confusion et métriques ont été calculées et sauvegardées." << endl;
+    cout << "Toutes les matrices de confusion, métriques, et données PR ont été calculées et sauvegardées." << endl;
     return 0;
 
 
