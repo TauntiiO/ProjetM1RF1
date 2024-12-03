@@ -17,6 +17,7 @@ public:
     void printMatrix() const;
 
     const std::vector<std::vector<int>>& getMatrix() const;
+    void saveToCSV(const std::string& filename) const;
 };
 
 #endif

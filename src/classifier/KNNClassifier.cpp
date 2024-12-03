@@ -162,3 +162,30 @@ void KNNClassifier::printStoredDistances() const {
         }
     }
 }
+
+std::pair<int, double> KNNClassifier::predictLabelWithConfidence(const Image& queryImage) const {
+    // Trouver les K plus proches voisins
+    std::vector<std::pair<double, int>> neighbors = findKNearestNeighbors(queryImage);
+
+    // Calculer les votes pour chaque label
+    std::unordered_map<int, int> labelVotes;
+    for (const auto& neighbor : neighbors) {
+        labelVotes[neighbor.second]++;
+    }
+
+    // Déterminer le label avec le plus de votes
+    int predictedLabel = -1;
+    int maxVotes = 0;
+    for (const auto& vote : labelVotes) {
+        if (vote.second > maxVotes) {
+            predictedLabel = vote.first;
+            maxVotes = vote.second;
+        }
+    }
+
+    // Calculer la confiance
+    double confidence = static_cast<double>(maxVotes) / k;
+
+    // Retourner le label prédit et la confiance
+    return std::make_pair(predictedLabel, confidence);
+}

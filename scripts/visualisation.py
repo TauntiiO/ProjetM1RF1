@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_recall_curve, auc
 
 def sanitize_filename(filename):
     """Nettoie un nom de fichier en supprimant ou remplaçant les caractères spéciaux."""
@@ -62,6 +62,31 @@ def plot_confusion_matrix(y_true, y_pred, representation, algorithm, save_dir="r
     plt.savefig(output_path)
     plt.close()
 
+# Fonction pour afficher et sauvegarder une courbe précision/rappel
+def plot_precision_recall_curve(y_true, y_scores, representation, algorithm, save_dir="results/precision_recall_curves"):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    # Binariser les étiquettes pour le calcul des courbes
+    unique_classes = np.unique(y_true)
+    for cls in unique_classes:
+        binarized_y_true = (np.array(y_true) == cls).astype(int)
+        precision, recall, _ = precision_recall_curve(binarized_y_true, np.array(y_scores))
+        auc_score = auc(recall, precision)
+
+        # Création de la courbe précision/rappel
+        plt.figure(figsize=(8, 8))
+        plt.plot(recall, precision, label=f'Classe {cls} (AUC={auc_score:.2f})')
+        plt.xlabel("Recall")
+        plt.ylabel("Precision")
+        plt.title(f"Courbe Précision/Rappel {algorithm} pour {representation} (Classe {cls})")
+        plt.legend()
+        sanitized_representation = sanitize_filename(representation)
+        sanitized_algorithm = sanitize_filename(algorithm)
+        output_path = os.path.join(save_dir, f"{sanitized_representation}_{sanitized_algorithm}_precision_recall_class_{cls}.png")
+        plt.savefig(output_path)
+        plt.close()
+
 # Main
 def main():
     file_path = "./in.txt"  # Chemin vers votre fichier texte
@@ -71,10 +96,12 @@ def main():
         for algorithm, data in algorithms.items():  # Pour chaque algorithme (KNN, KMeans)
             y_true = data["y_true"]
             y_pred = data["y_pred"]
+            y_scores = y_pred  # À remplacer par des scores réels si disponibles
 
             if len(y_true) > 0 and len(y_pred) > 0:
                 plot_confusion_matrix(y_true, y_pred, representation, algorithm)  # Passez 'algorithm'
-                print(f"Matrice de confusion générée pour {representation} avec {algorithm}.")
+                plot_precision_recall_curve(y_true, y_scores, representation, algorithm)
+                print(f"Visualisations générées pour {representation} avec {algorithm}.")
             else:
                 print(f"Pas de données pour {representation} avec {algorithm}.")
 

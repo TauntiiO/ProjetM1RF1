@@ -1,22 +1,40 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <filesystem>
-#include <unordered_map>
-#include <random>
-#include <algorithm> 
 #include "../dataRepo/DataRepresentation.h"
 #include "../dataRepo/Image.h"
 #include "../dataRepo/DataCollection.h"
 #include "../classifier/KNNClassifier.h"
 #include "../classifier/KMeans.h"
-#include "../classifier/KNNClassifier.h"
 #include "../evaluation/ConfusionMatrix.h"
 #include "../evaluation/Metrics.h"
 
+#include <iostream>
+#include <vector>
+#include <string>
+#include <filesystem>
+#include <fstream>
+#include <random>
+#include <algorithm>
+
+namespace fs = std::filesystem;
 using namespace std;
 
-//créer k folds
+std::string getProjectRootDir(const char* argv0) {
+    try {
+        fs::path execPath = fs::path(argv0);
+        if (!execPath.is_absolute()) {
+            execPath = fs::current_path() / execPath; 
+        }
+        execPath = execPath.parent_path().parent_path();
+        if (!fs::exists(execPath)) {
+            cerr << "Erreur : Le chemin spécifié n'existe pas : " << execPath << endl;
+            return {};
+        }
+        return fs::canonical(execPath).string();
+    } catch (const fs::filesystem_error& e) {
+        cerr << "Erreur lors de la résolution du chemin : " << e.what() << endl;
+        return {};
+    }
+}
+
 vector<vector<Image>> createKFolds(const vector<Image>& data, int k) {
     vector<vector<Image>> folds(k);
     vector<Image> shuffledData = data;
@@ -30,38 +48,62 @@ vector<vector<Image>> createKFolds(const vector<Image>& data, int k) {
     return folds;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc < 1 || argv[0] == nullptr) {
+        cerr << "Erreur : Impossible de déterminer le chemin du binaire.\n";
+        return 1;
+    }
+
+    std::string rootDir = getProjectRootDir(argv[0]);
+    if (rootDir.empty()) {
+        cerr << "Erreur : Impossible de déterminer le répertoire racine.\n";
+        return 1;
+    }
+
+    rootDir += "/data/=Signatures";
+
     vector<string> representationDirs = {
-        "./data/=Signatures/=ART",
-        "./data/=Signatures/=Yang",
-        "./data/=Signatures/=GFD",
-        "./data/=Signatures/=Zernike7"
+        rootDir + "/=ART",
+        rootDir + "/=Yang",
+        rootDir + "/=GFD",
+        rootDir + "/=Zernike7"
     };
 
+    string confusionDir = "results/confusion_matrices";
+    string metricsDir = "results/metrics";
+
+    if (!fs::exists(confusionDir)) {
+        fs::create_directories(confusionDir);
+    }
+    if (!fs::exists(metricsDir)) {
+        fs::create_directories(metricsDir);
+    }
+
     for (const auto& representationDir : representationDirs) {
+        if (!fs::exists(representationDir)) {
+            cerr << "Erreur : Le répertoire de représentation n'existe pas : " << representationDir << endl;
+            continue;
+        }
+
         string trainDir = representationDir + "/train";
         string testDir = representationDir + "/test";
 
-        DataCollection trainDataset;
+        if (!fs::exists(trainDir) || !fs::exists(testDir)) {
+            cerr << "Erreur : Les répertoires train/test sont manquants pour : " << representationDir << endl;
+            continue;
+        }
+
+        DataCollection trainDataset, testDataset;
         trainDataset.loadDatasetFromDirectory(trainDir);
-        vector<Image> trainImages = trainDataset.getImages();
-
-        DataCollection testDataset;
         testDataset.loadDatasetFromDirectory(testDir);
-        vector<Image> testImages = testDataset.getImages();
 
-        cout << "\n=== Évaluation pour la représentation : " << representationDir << " ===" << endl;
-        cout << "Nombre d'images dans l'ensemble d'entraînement : " << trainImages.size() << endl;
-        cout << "Nombre d'images dans l'ensemble de test : " << testImages.size() << endl;
+        vector<Image> trainImages = trainDataset.getImages();
+        vector<Image> testImages = testDataset.getImages();
 
         if (trainImages.empty() || testImages.empty()) {
             cout << "Données insuffisantes pour la représentation : " << representationDir << ". Passé.\n";
             continue;
         }
-
-        cout << "Normalisation des descripteurs...\n";
-        vector<Image> normalizedTrainImages = trainImages;
-        vector<Image> normalizedTestImages = testImages;
 
         size_t numDescriptors = trainImages[0].getDescripteurs().size();
         vector<double> minValues(numDescriptors, numeric_limits<double>::max());
@@ -75,118 +117,44 @@ int main() {
             }
         }
 
-        for (auto& img : normalizedTrainImages) {
-            vector<double> normalizedDescriptors(numDescriptors);
-            const auto& descripteurs = img.getDescripteurs();
-            for (size_t i = 0; i < descripteurs.size(); ++i) {
-                if (maxValues[i] != minValues[i]) {
-                    normalizedDescriptors[i] = (descripteurs[i] - minValues[i]) / (maxValues[i] - minValues[i]);
-                } else {
-                    normalizedDescriptors[i] = 0.0;
-                }
-            }
-            img.setDescripteurs(normalizedDescriptors);
-        }
-
-        for (auto& img : normalizedTestImages) {
-            vector<double> normalizedDescriptors(numDescriptors);
-            const auto& descripteurs = img.getDescripteurs();
-            for (size_t i = 0; i < descripteurs.size(); ++i) {
-                if (maxValues[i] != minValues[i]) {
-                    normalizedDescriptors[i] = (descripteurs[i] - minValues[i]) / (maxValues[i] - minValues[i]);
-                } else {
-                    normalizedDescriptors[i] = 0.0;
-                }
-            }
-            img.setDescripteurs(normalizedDescriptors);
-        }
-
-        cout << "\n=== Validation croisée KNN ===" << endl;
-        int kFolds = 5;
-        vector<vector<Image>> folds = createKFolds(normalizedTrainImages, kFolds);
-
-        double bestAccuracy = 0.0;
-        int bestK = 3;//defaut
-
-        for (int candidateK = 1; candidateK <= 10; ++candidateK) {
-            double totalFoldAccuracy = 0.0;
-
-            for (int i = 0; i < kFolds; ++i) {
-                vector<Image> foldTrainImages, foldTestImages = folds[i];
-                for (int j = 0; j < kFolds; ++j) {
-                    if (j != i) {
-                        foldTrainImages.insert(foldTrainImages.end(), folds[j].begin(), folds[j].end());
+        auto normalizeDescriptors = [&](vector<Image>& images) {
+            for (auto& img : images) {
+                vector<double> normalizedDescriptors(numDescriptors);
+                const auto& descripteurs = img.getDescripteurs();
+                for (size_t i = 0; i < descripteurs.size(); ++i) {
+                    if (maxValues[i] != minValues[i]) {
+                        normalizedDescriptors[i] = (descripteurs[i] - minValues[i]) / (maxValues[i] - minValues[i]);
+                    } else {
+                        normalizedDescriptors[i] = 0.0;
                     }
                 }
-
-                KNNClassifier knn(foldTrainImages, candidateK, "euclidean");
-
-                int correctPredictions = 0;
-                for (const auto& testImage : foldTestImages) {
-                    int predictedLabel = knn.predictLabel(testImage);
-                    if (predictedLabel == testImage.getLabel()) {
-                        correctPredictions++;
-                    }
-                }
-
-                double foldAccuracy = static_cast<double>(correctPredictions) / foldTestImages.size();
-                totalFoldAccuracy += foldAccuracy;
+                img.setDescripteurs(normalizedDescriptors);
             }
+        };
 
-            double averageFoldAccuracy = totalFoldAccuracy / kFolds;
-            cout << "K=" << candidateK << ", Précision moyenne : " << averageFoldAccuracy * 100 << "%" << endl;
+        normalizeDescriptors(trainImages);
+        normalizeDescriptors(testImages);
 
-            if (averageFoldAccuracy > bestAccuracy) {
-                bestAccuracy = averageFoldAccuracy;
-                bestK = candidateK;
-            }
-        }
-
-        cout << "Meilleur K pour KNN : " << bestK << " avec une précision moyenne de : " << bestAccuracy * 100 << "%" << endl;
-
-        cout << "\n=== Classification avec KNN (K=" << bestK << ") ===" << endl;
-        KNNClassifier knn(normalizedTrainImages, bestK, "euclidean");
+        KNNClassifier knn(trainImages, 1, "euclidean"); 
         ConfusionMatrix confusionMatrix(10);
 
-        int correctPredictions = 0;
-        for (const auto& testImage : normalizedTestImages) {
-            int predictedLabel = knn.predictLabel(testImage);
+        for (const auto& testImage : testImages) {
+            int predictedLabel;
+            double confidenceScore;
+            tie(predictedLabel, confidenceScore) = knn.predictLabelWithConfidence(testImage);
             confusionMatrix.addPrediction(testImage.getLabel(), predictedLabel);
-            if (predictedLabel == testImage.getLabel()) {
-                correctPredictions++;
-            }
         }
 
-        confusionMatrix.printMatrix();
+        string representationName = fs::path(representationDir).filename().string();
+        string confusionCSV = confusionDir + "/" + representationName + "_confusion_matrix.csv";
+        confusionMatrix.saveToCSV(confusionCSV);
 
-        double accuracy = static_cast<double>(correctPredictions) / normalizedTestImages.size();
-        cout << "Précision pour la représentation " << representationDir << " : " << accuracy * 100 << "%" << endl;
-
-        Metrics::printMetrics(confusionMatrix.getMatrix());
-
-        cout << "\n=== Clustering avec K-Means ===" << endl;
-        KMeans kmeans(10); 
-        kmeans.fit(normalizedTrainImages);
-
-        ConfusionMatrix kmeansConfusionMatrix(10);
-        correctPredictions = 0;
-
-        for (const auto& testImage : normalizedTestImages) {
-            int predictedCluster = kmeans.predictCluster(testImage);
-            kmeansConfusionMatrix.addPrediction(testImage.getLabel(), predictedCluster);
-
-            if (predictedCluster == testImage.getLabel()) {
-                correctPredictions++;
-            }
-        }
-
-        kmeansConfusionMatrix.printMatrix();
-
-        accuracy = static_cast<double>(correctPredictions) / normalizedTestImages.size();
-        cout << "Précision K-Means pour la représentation " << representationDir << " : " << accuracy * 100 << "%" << endl;
+        string metricsCSV = metricsDir + "/" + representationName + "_metrics.csv";
+        Metrics::calculateMetricsFromCSV(confusionCSV, metricsCSV);
     }
 
-
+    cout << "Toutes les matrices de confusion et métriques ont été calculées et sauvegardées." << endl;
+    return 0;
 
 
 

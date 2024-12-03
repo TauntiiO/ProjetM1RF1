@@ -54,7 +54,7 @@ bool Image::isValidRepresentation(const string& expectedType) const {
 
 //Vérifie si la taille du vecteur des descripteurs est correcte en comparant sa taille à celle qui est attendue
 bool Image::validateDescriptors(int expectedSize) const {
-    return descripteurs.size() == expectedSize;
+    return descripteurs.size() == static_cast<std::size_t>(expectedSize);
 }
 
 bool Image::validateDescriptorsForType() const {

@@ -15,12 +15,12 @@ protected:
     std::string distanceType;    
     std::unordered_map<std::string, std::unordered_map<int, std::vector<std::pair<std::string, double>>>> distancesByRepresentationAndLabel;
 
-
 public:
     KNNClassifier(const std::vector<Image>& data, int kValue, const std::string& distType);
     double calculateDistance(const Image& img1, const Image& img2) const;
     std::vector<std::pair<double, int>> findKNearestNeighbors(const Image& queryImage) const;
     int predictLabel(const Image& queryImage) const;
+    std::pair<int, double> predictLabelWithConfidence(const Image& queryImage) const; // Ajout
     void setK(int kValue);
     void printDatasetInfo() const;
     void checkClassBalance(const std::vector<Image>& data);

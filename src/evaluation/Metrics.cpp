@@ -1,5 +1,7 @@
 #include "Metrics.h"
+#include <fstream>
 #include <iostream>
+#include <iomanip>
 
 double Metrics::accuracy(const std::vector<std::vector<int>>& confusionMatrix) {
     int correct = 0, total = 0;
@@ -63,4 +65,75 @@ void Metrics::printMetrics(const std::vector<std::vector<int>>& confusionMatrix)
                   << "%, Recall = " << recallValues[i] * 100
                   << "%, F1-Score = " << f1Values[i] * 100 << "%\n";
     }
+}
+void Metrics::saveMetricsToCSV(const std::vector<std::vector<int>>& confusionMatrix, const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Erreur : Impossible d'ouvrir le fichier pour écrire les métriques." << std::endl;
+        return;
+    }
+
+    double acc = accuracy(confusionMatrix);
+    std::vector<double> precisionValues = precision(confusionMatrix);
+    std::vector<double> recallValues = recall(confusionMatrix);
+    std::vector<double> f1Values = f1Score(confusionMatrix);
+
+    outFile << "Class,Precision,Recall,F1-Score\n";
+
+    for (size_t i = 0; i < precisionValues.size(); ++i) {
+        outFile << i + 1 << ",";
+        outFile << std::fixed << std::setprecision(2) << precisionValues[i] * 100 << "%,";
+        outFile << std::fixed << std::setprecision(2) << recallValues[i] * 100 << "%,";
+        outFile << std::fixed << std::setprecision(2) << f1Values[i] * 100 << "%\n";
+    }
+
+    outFile << "Global,,"; 
+    outFile << "Accuracy," << std::fixed << std::setprecision(2) << acc * 100 << "%\n";
+
+    outFile.close();
+    std::cout << "Métriques sauvegardées dans : " << filename << std::endl;
+}
+
+
+std::vector<std::vector<int>> loadConfusionMatrixFromCSV(const std::string& filename) {
+    std::vector<std::vector<int>> matrix;
+    std::ifstream inFile(filename);
+    if (!inFile.is_open()) {
+        std::cerr << "Erreur : Impossible d'ouvrir le fichier CSV : " << filename << std::endl;
+        return matrix;
+    }
+
+    std::string line;
+    bool headerSkipped = false;
+
+    while (std::getline(inFile, line)) {
+        if (!headerSkipped) {
+            headerSkipped = true;
+            continue;
+        }
+        std::stringstream ss(line);
+        std::vector<int> row;
+        std::string cell;
+
+        std::getline(ss, cell, ',');
+
+        while (std::getline(ss, cell, ',')) {
+            row.push_back(std::stoi(cell));
+        }
+        matrix.push_back(row);
+    }
+
+    inFile.close();
+    return matrix;
+}
+
+void Metrics::calculateMetricsFromCSV(const std::string& inputCSV, const std::string& outputCSV) {
+    std::vector<std::vector<int>> confusionMatrix = loadConfusionMatrixFromCSV(inputCSV);
+
+    if (confusionMatrix.empty()) {
+        std::cerr << "Erreur : Matrice de confusion vide ou invalide dans le fichier " << inputCSV << std::endl;
+        return;
+    }
+
+    saveMetricsToCSV(confusionMatrix, outputCSV);
 }
