@@ -1,172 +1,169 @@
 #include "KMeans.h"
+#include <cmath>
+#include <limits>
+#include <random>
+#include <unordered_map>
+#include <algorithm>
+#include <iostream>
 
-KMeans::KMeans(int k) : k(k) {
-    srand(static_cast<unsigned>(time(0)));  // Initialiser le générateur de nombres aléatoires
-}
+KMeans::KMeans(int numClusters, int numFeatures, int maxIterations, double tolerance)
+    : numClusters(numClusters), numFeatures(numFeatures), maxIterations(maxIterations), tolerance(tolerance) {}
 
 void KMeans::fit(const std::vector<Image>& images) {
-    initializeCentroids(images);
-    
-    bool changed;
-    do {
-        changed = false;
-        assignClusters(images);
-        
-        for (int i = 0; i < k; ++i) {
-            std::vector<double> newCentroid = updateCentroid(images, i);
-            if (newCentroid != centroids[i]) {
-                centroids[i] = newCentroid;
-                changed = true;
-            }
+    // Séparer les images par leur type de représentation
+    std::unordered_map<std::string, std::vector<Image>> imagesByRepresentation;
+    for (const auto& image : images) {
+        imagesByRepresentation[image.getRepresentationType()].push_back(image);
+    }
+
+    // Entraîner KMeans sur chaque groupe d'images de la même représentation
+    for (const auto& pair : imagesByRepresentation) {
+        const std::string& representation = pair.first;
+        const std::vector<Image>& repImages = pair.second;
+
+        std::vector<std::vector<double>> centroids(numClusters, std::vector<double>(numFeatures, 0.0));
+        std::vector<int> assignments(repImages.size(), -1);
+
+        // Initialisation aléatoire des centroids
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dist(0, repImages.size() - 1);
+        for (int i = 0; i < numClusters; ++i) {
+            centroids[i] = repImages[dist(gen)].getDescripteurs();
         }
-    } while (changed);
-    
-    // Mise à jour des labels dominants pour chaque cluster
-    updateClusterLabels(images);
-}
 
+        bool converged = false;
+        for (int iteration = 0; iteration < maxIterations && !converged; ++iteration) {
+            converged = true;
 
-void KMeans::initializeCentroids(const std::vector<Image>& images) {
-    // Choisir k centroids aléatoires à partir des images
-    for (int i = 0; i < k; ++i) {
-        int index = rand() % images.size();
-        centroids.push_back(images[index].getDescripteurs());
+            // Réassigner chaque image à son cluster le plus proche
+            for (size_t i = 0; i < repImages.size(); ++i) {
+                const auto& features = repImages[i].getDescripteurs();
+                double minDistance = std::numeric_limits<double>::max();
+                int closestCluster = -1;
+
+                for (int j = 0; j < numClusters; ++j) {
+                    double distance = calculateDistance(features, centroids[j]);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestCluster = j;
+                    }
+                }
+
+                if (assignments[i] != closestCluster) {
+                    assignments[i] = closestCluster;
+                    converged = false;
+                }
+            }
+
+            // Mettre à jour les centroids
+            std::vector<std::vector<double>> newCentroids(numClusters, std::vector<double>(numFeatures, 0.0));
+            std::vector<int> clusterSizes(numClusters, 0);
+
+            for (size_t i = 0; i < repImages.size(); ++i) {
+                int cluster = assignments[i];
+                const auto& features = repImages[i].getDescripteurs();
+                for (int j = 0; j < numFeatures; ++j) {
+                    newCentroids[cluster][j] += features[j];
+                }
+                ++clusterSizes[cluster];
+            }
+
+            for (int j = 0; j < numClusters; ++j) {
+                if (clusterSizes[j] > 0) {
+                    for (int k = 0; k < numFeatures; ++k) {
+                        newCentroids[j][k] /= clusterSizes[j];
+                    }
+                }
+            }
+
+            centroids = newCentroids;
+        }
+
+        // Associer les labels aux centroids
+        associateLabelsToCentroids(repImages, assignments, centroids);
+
+        // Sauvegarder les centroids et les labels pour cette représentation
+        centroidsByRepresentation[representation] = centroids;
     }
 }
 
-void KMeans::assignClusters(const std::vector<Image>& images) {
-    labels.resize(images.size());
+void KMeans::associateLabelsToCentroids(const std::vector<Image>& images, const std::vector<int>& assignments, const std::vector<std::vector<double>>& centroids) {
+    // Associer chaque centroid au label qui est le plus fréquent parmi les images du cluster
+    std::unordered_map<int, std::unordered_map<int, int>> clusterLabelCount;  // Cluster -> (Label -> count)
     for (size_t i = 0; i < images.size(); ++i) {
-        double minDistance = std::numeric_limits<double>::max();
-        for (int j = 0; j < k; ++j) {
-            double distance = euclideanDistance(images[i].getDescripteurs(), centroids[j]);
-            if (distance < minDistance) {
-                minDistance = distance;
-                labels[i] = j;  // Assigner le cluster le plus proche
-            }
-        }
-    }
-}
-
-std::vector<double> KMeans::updateCentroid(const std::vector<Image>& images, int clusterId) {
-    std::vector<double> newCentroid(centroids[clusterId].size(), 0.0);
-    int count = 0;
-
-    for (size_t i = 0; i < images.size(); ++i) {
-        if (labels[i] == clusterId) {
-            const std::vector<double>& point = images[i].getDescripteurs();
-            for (size_t j = 0; j < point.size(); ++j) {
-                newCentroid[j] += point[j];
-            }
-            count++;
-        }
+        int cluster = assignments[i];
+        int label = images[i].getLabel();
+        clusterLabelCount[cluster][label]++;
     }
 
-    // Éviter la division par zéro
-    if (count > 0) {
-        for (size_t j = 0; j < newCentroid.size(); ++j) {
-            newCentroid[j] /= count;  // Prendre la moyenne
-        }
-    }
-    return newCentroid;
-}
-
-double KMeans::euclideanDistance(const std::vector<double>& a, const std::vector<double>& b) {
-    double sum = 0.0;
-    for (size_t i = 0; i < a.size(); ++i) {
-        sum += (a[i] - b[i]) * (a[i] - b[i]);
-    }
-    return sqrt(sum);
-}
-
-void KMeans::printClusters(const std::vector<Image>& images) const {
-    for (int i = 0; i < k; ++i) {
-        std::cout << "Cluster " << i << " : ";
-        for (size_t j = 0; j < labels.size(); ++j) {
-            if (labels[j] == i) {
-                std::cout << j << " ";  // Affiche l'indice du point
-            }
-        }
-        std::cout << std::endl;
-    }
-    int totalCorrect = 0;
-    int totalImages = images.size();  // Nombre total d'images dans le dataset
-
-    // Parcourir chaque cluster
-    for (int i = 0; i < k; ++i) {
-        std::cout << "Cluster " << i << " : ";
-        
-        // Compter les fréquences des labels réels dans le cluster
-        std::unordered_map<int, int> labelCounts;
-        for (size_t j = 0; j < labels.size(); ++j) {
-            if (labels[j] == i) {  // Si l'image appartient au cluster i
-                int realLabel = images[j].getLabel();  // Récupérer le label réel de l'image
-                labelCounts[realLabel]++;  // Compter les occurrences de chaque label réel
-            }
-        }
-
-        // Trouver le label le plus fréquent dans ce cluster
-        int mostFrequentLabel = -1;
-        int maxCount = 0;
-        for (const auto& pair : labelCounts) {
+    std::vector<int> labels(numClusters, -1);
+    for (int i = 0; i < numClusters; ++i) {
+        int bestLabel = -1;
+        int maxCount = -1;
+        for (const auto& pair : clusterLabelCount[i]) {
             if (pair.second > maxCount) {
-                mostFrequentLabel = pair.first;
+                bestLabel = pair.first;
                 maxCount = pair.second;
             }
         }
-
-        // Afficher le label le plus fréquent dans ce cluster
-        std::cout << "Label le plus fréquent : " << mostFrequentLabel << " avec " << maxCount << " occurrences." << std::endl;
-
-        // Ajouter les bonnes prédictions à la somme totale
-        totalCorrect += maxCount;
+        labels[i] = bestLabel;
+        //std::cout << "Cluster " << i << " is associated with label " << bestLabel << " with " << maxCount << " images." << std::endl;
     }
-    
-    // Afficher la statistique des prédictions correctes
-    std::cout << "Prédictions correctes : " << totalCorrect << " sur " << totalImages << std::endl;
+
+    centroidLabelsByRepresentation[images[0].getRepresentationType()] = labels;
 }
 
-void KMeans::updateClusterLabels(const std::vector<Image>& images) {
-    clusterLabels.resize(k, -1);  // Initialiser les labels des clusters
-    
-    for (int i = 0; i < k; ++i) {
-        std::unordered_map<int, int> labelCounts;  // Compteur de labels pour le cluster i
-        
-        for (size_t j = 0; j < labels.size(); ++j) {
-            if (labels[j] == i) {  // Si l'image appartient au cluster i
-                int realLabel = images[j].getLabel();  // Récupérer le label réel
-                labelCounts[realLabel]++;  // Incrémenter le compteur pour ce label
-            }
-        }
-        
-        // Trouver le label dominant pour ce cluster
-        int mostFrequentLabel = -1;
-        int maxCount = 0;
-        for (const auto& pair : labelCounts) {
-            if (pair.second > maxCount) {
-                mostFrequentLabel = pair.first;
-                maxCount = pair.second;
-            }
-        }
-        
-        clusterLabels[i] = mostFrequentLabel;  // Associer le label dominant au cluster
+std::pair<int, double> KMeans::predictLabelWithConfidence(const Image& image) const {
+    const std::string& representation = image.getRepresentationType();
+    auto it = centroidsByRepresentation.find(representation);
+    if (it == centroidsByRepresentation.end()) {
+        std::cerr << "Erreur : Représentation non trouvée pour la prédiction." << std::endl;
+        return {-1, 0.0};
     }
-}
 
-int KMeans::predictCluster(const Image& image) {
+    const auto& centroids = it->second;
+    const auto& features = image.getDescripteurs();
     double minDistance = std::numeric_limits<double>::max();
-    int bestCluster = -1;
+    int closestCluster = -1;
 
-    for (int i = 0; i < k; ++i) {
-        double distance = euclideanDistance(image.getDescripteurs(), centroids[i]);
+    // Trouver le centroid le plus proche
+    for (int i = 0; i < numClusters; ++i) {
+        double distance = calculateDistance(features, centroids[i]);
         if (distance < minDistance) {
             minDistance = distance;
-            bestCluster = i;
+            closestCluster = i;
         }
     }
-    
-    // Retourner le label associé au cluster
-    return clusterLabels[bestCluster];
+
+    // Utiliser l'association du label avec le centroid
+    auto labelIt = centroidLabelsByRepresentation.find(representation);
+    int label = -1;
+    if (labelIt != centroidLabelsByRepresentation.end()) {
+        label = labelIt->second[closestCluster];
+    }
+
+    double confidence = calculateConfidence(features, closestCluster);
+    //std::cout << "Predicted label: " << label << " with confidence: " << confidence << std::endl;
+    return {label, confidence};
 }
 
+double KMeans::calculateDistance(const std::vector<double>& a, const std::vector<double>& b) const {
+    double sum = 0.0;
+    for (size_t i = 0; i < a.size(); ++i) {
+        double diff = a[i] - b[i];
+        sum += diff * diff;
+    }
+    return std::sqrt(sum);
+}
 
+double KMeans::calculateConfidence(const std::vector<double>& features, int closestCluster) const {
+    double distanceToClosest = calculateDistance(features, centroidsByRepresentation.begin()->second[closestCluster]);
+    double totalDistance = 0.0;
+
+    for (const auto& centroid : centroidsByRepresentation.begin()->second) {
+        totalDistance += calculateDistance(features, centroid);
+    }
+
+    return 1.0 - (distanceToClosest / totalDistance);
+}

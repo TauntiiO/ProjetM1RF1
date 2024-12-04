@@ -1,39 +1,39 @@
 #ifndef KMEANS_H
 #define KMEANS_H
 
-#include <iostream>
 #include <vector>
-#include <limits>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <filesystem>
-#include "../dataRepo/DataRepresentation.h"
+#include <unordered_map>
 #include "../dataRepo/Image.h"
 
 class KMeans {
 public:
-    // Constructeur
-    KMeans(int k);
+    KMeans(int numClusters, int numFeatures, int maxIterations = 100, double tolerance = 1e-4);
 
-    // Méthodes principales
-    void fit(const std::vector<Image>& images);         // Entraîner le modèle
-    int predictCluster(const Image& image);            // Prédire le cluster d'une image
-    void printClusters(const std::vector<Image>& images) const; // Afficher les clusters et leur contenu
+    // Entraîner KMeans avec un ensemble d'images
+    void fit(const std::vector<Image>& images);
+
+    // Prédire le label et retourner un score de confiance pour une image donnée
+    std::pair<int, double> predictLabelWithConfidence(const Image& image) const;
 
 private:
-    int k;                                             // Nombre de clusters
-    std::vector<std::vector<double>> centroids;        // Centroids des clusters
-    std::vector<int> labels;                           // Assignation des clusters pour chaque point
-    std::vector<int> clusterLabels;                   // Labels dominants des clusters
+    int numClusters;  // Nombre de clusters (classes)
+    int numFeatures;  // Nombre de dimensions dans les descripteurs
+    int maxIterations;  // Nombre maximum d'itérations
+    double tolerance;  // Tolérance pour la convergence
 
-    // Méthodes auxiliaires
-    void initializeCentroids(const std::vector<Image>& images); // Initialiser les centroids
-    void assignClusters(const std::vector<Image>& images);      // Assigner les clusters
-    std::vector<double> updateCentroid(const std::vector<Image>& images, int clusterId); // Mettre à jour un centroid
-    void updateClusterLabels(const std::vector<Image>& images); // Déterminer les labels dominants des clusters
-    double euclideanDistance(const std::vector<double>& a, const std::vector<double>& b); // Calculer la distance euclidienne
+    // Centroids pour chaque représentation
+    std::unordered_map<std::string, std::vector<std::vector<double>>> centroidsByRepresentation;
+    // Labels associés aux centroids
+    std::unordered_map<std::string, std::vector<int>> centroidLabelsByRepresentation;
+
+    // Fonction auxiliaire pour calculer la distance entre deux vecteurs
+    double calculateDistance(const std::vector<double>& a, const std::vector<double>& b) const;
+
+    // Calculer le score de confiance basé sur les distances aux centroids
+    double calculateConfidence(const std::vector<double>& features, int closestCluster) const;
+
+    // Associer un label au centroid pendant l'entraînement
+    void associateLabelsToCentroids(const std::vector<Image>& images, const std::vector<int>& assignments, const std::vector<std::vector<double>>& centroids);
 };
-
 
 #endif // KMEANS_H

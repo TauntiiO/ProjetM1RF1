@@ -23,7 +23,8 @@ std::string getProjectRootDir(const char* argv0) {
         if (!execPath.is_absolute()) {
             execPath = fs::current_path() / execPath;
         }
-        execPath = execPath.parent_path().parent_path();
+        //execPath = execPath.parent_path().parent_path();
+        execPath = execPath.parent_path();
         if (!fs::exists(execPath)) {
             cerr << "Erreur : Le chemin spécifié n'existe pas : " << execPath << endl;
             return {};
@@ -187,6 +188,42 @@ int main(int argc, char* argv[]) {
 
         string prFilename = prDataDir + "/" + representationName + "_pr_data.csv";
         savePRData(prFilename, prTrueLabels, prConfidenceScores);
+
+        // Initialisation et entraînement de K-Means
+        int numClusters = 10;
+        KMeans kmeans(numClusters, 100, numDescriptors);
+
+        // Entraîner le modèle K-Means
+        kmeans.fit(trainImages);
+
+        // Initialisation des variables pour la matrice de confusion et les données PR pour K-Means
+        ConfusionMatrix confusionMatrixKMeans(numClusters);
+        vector<int> prTrueLabelsKMeans;
+        vector<double> prConfidenceScoresKMeans;
+
+        // Prédictions sur les données de test
+        for (const auto& testImage : testImages) {
+            int predictedLabel;
+            double confidenceScore;
+            tie(predictedLabel, confidenceScore) = kmeans.predictLabelWithConfidence(testImage);
+
+            // Ajouter à la matrice de confusion
+            confusionMatrixKMeans.addPrediction(testImage.getLabel(), predictedLabel);
+
+            // Ajouter aux données PR
+            prTrueLabelsKMeans.push_back(testImage.getLabel());
+            prConfidenceScoresKMeans.push_back(confidenceScore);
+        }
+
+        // Sauvegarder les résultats pour K-Means
+        string confusionCSVKMeans = confusionDir + "/" + representationName + "_KMeans_confusion_matrix.csv";
+        confusionMatrixKMeans.saveToCSV(confusionCSVKMeans);
+
+        string metricsCSVKMeans = metricsDir + "/" + representationName + "_KMeans_metrics.csv";
+        Metrics::calculateMetricsFromCSV(confusionCSVKMeans, metricsCSVKMeans);
+
+        string prFilenameKMeans = prDataDir + "/" + representationName + "_KMeans_pr_data.csv";
+        savePRData(prFilenameKMeans, prTrueLabelsKMeans, prConfidenceScoresKMeans);
     }
 
     cout << "Toutes les matrices de confusion, métriques, et données PR ont été calculées et sauvegardées." << endl;
