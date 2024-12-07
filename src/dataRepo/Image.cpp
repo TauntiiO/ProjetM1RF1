@@ -1,5 +1,4 @@
-
-#include "Image.h"
+#include "dataRepo/Image.h"
 #include <sstream>
 #include <iostream>
 #include <iomanip> 
@@ -47,12 +46,11 @@ const string& Image::getImagePath() const {
     return imagePath;
 }
 
-//Verifie si le type de l'image correspond au type 
 bool Image::isValidRepresentation(const string& expectedType) const {
     return representationType == expectedType;
 }
 
-//Vérifie si la taille du vecteur des descripteurs est correcte en comparant sa taille à celle qui est attendue
+
 bool Image::validateDescriptors(int expectedSize) const {
     return descripteurs.size() == static_cast<std::size_t>(expectedSize);
 }
@@ -81,11 +79,6 @@ bool Image::operator<(const Image& other) const {
 }
 
 
-/**
- * Vérifie que le label d'une image se trouve bien dans la plage donnée
- * Compare le label de l'image avec les valeurs min et max.
- * Si le label est comprie entre ces deux valeurs il renvoie true sinon false
- */
 bool Image::validateLabel(int minLabel, int maxLabel) const {
     return label >= minLabel && label <= maxLabel;
 }

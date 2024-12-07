@@ -8,6 +8,16 @@ output_dir = "../results/Visualisations"
 os.makedirs(output_dir, exist_ok=True)
 
 def visualize_metrics(file_path, output_path):
+    """
+    Fabrique un graphique des métriques (précision, rappel, F1-score) pour chaque classe.
+
+    Entrée :
+        - file_path (str) : Chemin CSV avec les métriques.
+        - output_path (str) : chemin pour sauvegarder le graphiqu.
+    
+    Sortie :
+        - None : Le graphique est sauvegardé.
+    """
     metrics_df = pd.read_csv(file_path)
     if "Global" in metrics_df["Class"].values:
         metrics_df = metrics_df[metrics_df["Class"] != "Global"]

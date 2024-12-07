@@ -1,24 +1,15 @@
 #include <iostream>
-#include "DataRepresentation.h"
-#include "Image.h" 
+#include "dataRepo/DataRepresentation.h"
+#include "dataRepo/Image.h" 
 #include <fstream>
 #include <filesystem>
 namespace filesystem = std::filesystem;
 
 using namespace std;
 
-/**
-    * @param path : chemin du fichier
-*/
 DataRepresentation::DataRepresentation(const string& path) : filePath(path) {}
 
-/**
-    * Méthode pour lire les descripteurs à partir du fichier.
-    * Elle ouvre le fichier, extrait les descripteurs,
-    * et les stocke dans un vecteur.
-    * 
-    * @return true si la lecture est réussie, false sinon
-*/
+
 bool DataRepresentation::readFile() {
     data.clear();
     ifstream file(filePath);
@@ -42,36 +33,14 @@ bool DataRepresentation::readFile() {
     return true;
 }
 
-
-/**
-    * Renvoie le vecteur de descripteurs lu.
-    * 
-    * @return vecteur de descripteurs
-*/
 const vector<double>& DataRepresentation::getData() const {
     return data;
 }
 
-
-/**
-    * Renvoie le type de représentation associé à l'image.
-    * 
-    * @return type de représentation(en chaine)
-*/
 const string& DataRepresentation::getRepresentationType() const {
     return representationType;
 }
 
-/**
-    * Charge les fichiers de descripteurs depuis un répertoire.
-    * Limite l'ajout à 12 fichiers par classe.
-    * Les images créées à partir des descripteurs sont ajoutées à un vecteur d'images.
-    * 
-    * @param dirPath : chemin vers le répertoire des descripteurs
-    * @param pgmDir : chemin vers le répertoire des fichiers PGM
-    * @param images : vecteur où les images seront stockées
-    * @return true si tous les fichiers ont été correctement chargés
-*/
 bool DataRepresentation::loadFromDirectory(const string& dirPath, const string& pgmDir, vector<Image>& images) {
     unordered_map<string, int> sampleCounts;
 
@@ -102,9 +71,6 @@ bool DataRepresentation::loadFromDirectory(const string& dirPath, const string& 
     return true;
 }
 
-/**
- * Détermine le type de représentation (GFD, Yang, etc.) en fonction de la taille des descripteurs.
- */
 void DataRepresentation::determineRepresentationType() {
 
     if (data.size() == 18) {
@@ -121,13 +87,6 @@ void DataRepresentation::determineRepresentationType() {
     }
 }
 
-/**
-    * Extrait le label d'une image à partir de son nom de fichier.
-    * Le format est par exemple 's01n005' où '01' est le label.
-    * 
-    * @param filename : nom du fichier
-    * @return le label sous forme d'entier, ou -1 en cas d'erreur
-*/
 int DataRepresentation::extractLabelFromFilename(const string& filename) {
     if (filename.length() >= 7 && filename[0] == 's' && filename[3] == 'n') {
         string labelStr = filename.substr(1, 2);

@@ -1,19 +1,19 @@
-#include "DataCollection.h"
+#include "dataRepo/DataCollection.h"
 #include <iostream>
 #include <stdexcept>
 #include <filesystem> 
 #include <algorithm>
 #include <random>
 #include <unordered_map>
+#include <fstream>
+#include <vector>
+#include <string>
 
 using namespace std;
 namespace fs = std::filesystem; 
 
 DataCollection::DataCollection() : representationType("") {}
 
-/**
- * Méthode qui extrait le label d'une image.
- */
 int DataCollection::extractLabelFromFilename(const string& filename) {
     if (filename.length() >= 7 && filename[0] == 's' && filename[3] == 'n') {
         string labelStr = filename.substr(1, 2);
@@ -24,13 +24,11 @@ int DataCollection::extractLabelFromFilename(const string& filename) {
     }
 }
 
-/**
- * Méthode qui ajoute un point de données (image) dans le dataset.
- */
+
 bool DataCollection::addDatapoint(const Image& img) {
     int label = img.getLabel();
 
-    if (label < 1 || label > 10) {
+    if (label < 1 || label > 18) {
         cerr << "Image ignorée : classe " << label << " hors limite." << endl;
         return false;
     }
@@ -51,10 +49,6 @@ bool DataCollection::addDatapoint(const Image& img) {
     return true;  
 }
 
-
-/**
- * Méthode pour charger un dataset depuis un répertoire.
- */
 bool DataCollection::loadDatasetFromDirectory(const string& dirPath) {
     size_t totalImages = 0;
     unordered_map<string, size_t> fileCountsByExtension;
@@ -68,7 +62,7 @@ bool DataCollection::loadDatasetFromDirectory(const string& dirPath) {
                 if (filename.length() >= 7 && filename[0] == 's' && filename[3] == 'n') {
                     int label = extractLabelFromFilename(filename);
 
-                    if (label < 1 || label > 10) {
+                    if (label < 1 || label > 18) {
                         continue; 
                     }
 
@@ -95,7 +89,6 @@ bool DataCollection::loadDatasetFromDirectory(const string& dirPath) {
         }
     }
 
-    // Résumé
     cout << "=== Résumé du chargement ===" << endl;
     cout << "Total des images chargées : " << totalImages << endl;
     for (const auto& entry : fileCountsByExtension) {
@@ -106,20 +99,13 @@ bool DataCollection::loadDatasetFromDirectory(const string& dirPath) {
     return true;
 }
 
-
-/**
- * Affichage du dataset.
- */
-
-/**
- * Résumé du dataset chargé avec détails sur les descripteurs.
- */
+// Affichage d'un résumé du dataset
 void DataCollection::printDataset() const {
-    unordered_map<string, size_t> typeCounts;                // Comptage par type de représentation
-    unordered_map<string, size_t> descriptorCountsByType;    // Nombre total de descripteurs par type
-    unordered_map<int, size_t> labelCounts;                  // Comptage par label
-    unordered_map<string, size_t> descriptorsPerFileByType;  // Nombre de descripteurs par fichier pour chaque type
-    size_t totalDescriptors = 0;                             // Nombre total de descripteurs
+    unordered_map<string, size_t> typeCounts;
+    unordered_map<string, size_t> descriptorCountsByType;
+    unordered_map<int, size_t> labelCounts;
+    unordered_map<string, size_t> descriptorsPerFileByType;
+    size_t totalDescriptors = 0;
 
     for (const auto& entry : dataset) {
         const Image& img = entry.first;
@@ -154,10 +140,7 @@ void DataCollection::printDataset() const {
     cout << "============================" << endl;
 }
 
-
-/**
- * Récupération des images.
- */
+// Récupération des images
 vector<Image> DataCollection::getImages() const {
     vector<Image> images;
     for (const auto& entry : dataset) {
@@ -166,7 +149,7 @@ vector<Image> DataCollection::getImages() const {
     return images;
 }
 
-
+// Division du dataset en ensemble d'entraînement et de test
 void DataCollection::splitDataset(const std::vector<Image>& dataset, std::vector<Image>& trainSet, std::vector<Image>& testSet, float trainRatio) {
     size_t totalSize = dataset.size();
     size_t trainSize = static_cast<size_t>(totalSize * trainRatio);
@@ -180,6 +163,7 @@ void DataCollection::splitDataset(const std::vector<Image>& dataset, std::vector
     testSet.assign(shuffledData.begin() + trainSize, shuffledData.end());
 }
 
+
 std::unordered_map<std::string, std::vector<Image>> DataCollection::groupImagesByRepresentation(const std::vector<Image>& images) const {
     std::unordered_map<std::string, std::vector<Image>> groupedImages;
 
@@ -188,4 +172,49 @@ std::unordered_map<std::string, std::vector<Image>> DataCollection::groupImagesB
     }
 
     return groupedImages;
+}
+
+
+void DataCollection::computeNormalizationBounds(const std::vector<Image>& images) {
+    if (images.empty()) return;
+
+    size_t descriptorSize = images[0].getDescripteurs().size();
+    minValues.assign(descriptorSize, std::numeric_limits<double>::max());
+    maxValues.assign(descriptorSize, std::numeric_limits<double>::lowest());
+
+    for (const auto& img : images) {
+        const auto& descriptors = img.getDescripteurs();
+        for (size_t i = 0; i < descriptors.size(); ++i) {
+            minValues[i] = std::min(minValues[i], descriptors[i]);
+            maxValues[i] = std::max(maxValues[i], descriptors[i]);
+        }
+    }
+}
+
+void DataCollection::normalizeDataset(std::vector<Image>& images) {
+    for (auto& img : images) {
+        auto descriptors = img.getDescripteurs();
+        for (size_t i = 0; i < descriptors.size(); ++i) {
+            if (maxValues[i] != minValues[i]) {
+                descriptors[i] = (descriptors[i] - minValues[i]) / (maxValues[i] - minValues[i]);
+            } else {
+                descriptors[i] = 0.0; // Cas où les valeurs sont constantes
+            }
+        }
+        img.setDescripteurs(descriptors);
+    }
+}
+
+void DataCollection::savePRData(const std::string& filename, const std::vector<int>& trueLabels, const std::vector<double>& confidenceScores) {
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Erreur : Impossible d'ouvrir le fichier pour sauvegarder les données PR." << std::endl;
+        return;
+    }
+    outFile << "TrueLabel,ConfidenceScore\n";
+    for (size_t i = 0; i < trueLabels.size(); ++i) {
+        outFile << trueLabels[i] << "," << confidenceScores[i] << "\n";
+    }
+    outFile.close();
+    std::cout << "Données PR sauvegardées dans : " << filename << std::endl;
 }

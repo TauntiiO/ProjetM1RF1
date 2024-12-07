@@ -9,6 +9,16 @@ output_dir = "../results/Visualisations_PR"    # Dossier des visualisations
 os.makedirs(output_dir, exist_ok=True)
 
 def plot_pr_curve_grouped(file_path, output_path):
+    """
+    Génère une courbe précision/rappel pour les classes avec les meilleurs et pires AUC.
+
+    Entrée :
+        - file_path (str) : Chemin du fichier CSV.
+        - output_path (str) : Pour sauvegarder la courbe générée.
+    
+    Sortie :
+        - None : Courbe sauvegardée .
+    """
     data = pd.read_csv(file_path)
     true_labels = data['TrueLabel']
     confidence_scores = data['ConfidenceScore']

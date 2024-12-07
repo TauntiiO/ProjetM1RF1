@@ -1,4 +1,4 @@
-#include "KNNClassifier.h"
+#include "classifier/KNNClassifier.h"
 #include <cmath>
 #include <algorithm>
 #include <unordered_map>
@@ -80,7 +80,6 @@ int KNNClassifier::predictLabel(const Image& queryImage) const {
         }
     }
 
-    // Afficher la prédiction et la confiance
     double confidence = static_cast<double>(maxVotes) / k;
     cout << "Prédiction finale : " << predictedLabel
          << ", Confiance : " << confidence * 100 << "%" << endl;
@@ -164,16 +163,13 @@ void KNNClassifier::printStoredDistances() const {
 }
 
 std::pair<int, double> KNNClassifier::predictLabelWithConfidence(const Image& queryImage) const {
-    // Trouver les K plus proches voisins
     std::vector<std::pair<double, int>> neighbors = findKNearestNeighbors(queryImage);
 
-    // Calculer les votes pour chaque label
     std::unordered_map<int, int> labelVotes;
     for (const auto& neighbor : neighbors) {
         labelVotes[neighbor.second]++;
     }
 
-    // Déterminer le label avec le plus de votes
     int predictedLabel = -1;
     int maxVotes = 0;
     for (const auto& vote : labelVotes) {
@@ -183,9 +179,7 @@ std::pair<int, double> KNNClassifier::predictLabelWithConfidence(const Image& qu
         }
     }
 
-    // Calculer la confiance
     double confidence = static_cast<double>(maxVotes) / k;
 
-    // Retourner le label prédit et la confiance
     return std::make_pair(predictedLabel, confidence);
 }

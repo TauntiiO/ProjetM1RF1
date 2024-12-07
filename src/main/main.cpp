@@ -1,29 +1,32 @@
-#include "../dataRepo/DataRepresentation.h"
-#include "../dataRepo/Image.h"
-#include "../dataRepo/DataCollection.h"
-#include "../classifier/KNNClassifier.h"
-#include "../classifier/KMeans.h"
-#include "../evaluation/ConfusionMatrix.h"
-#include "../evaluation/Metrics.h"
+#include "dataRepo/DataRepresentation.h"
+#include "dataRepo/Image.h"
+#include "dataRepo/DataCollection.h"
+#include "classifier/KNNClassifier.h"
+#include "classifier/KMeans.h"
+#include "evaluation/ConfusionMatrix.h"
+#include "evaluation/Metrics.h"
 
 #include <iostream>
 #include <vector>
 #include <string>
 #include <filesystem>
-#include <fstream>
-#include <random>
-#include <algorithm>
 
 namespace fs = std::filesystem;
 using namespace std;
 
+/**
+ * Récupère le répertoire racine du projet à partir de l'exécutable.
+ * Entrée :
+ *   - argv0 (const char*) : Chemin de l'exécutable.
+ * Sortie :
+ *   - std::string : Chemin du répertoire racine.
+ */
 std::string getProjectRootDir(const char* argv0) {
     try {
         fs::path execPath = fs::path(argv0);
         if (!execPath.is_absolute()) {
             execPath = fs::current_path() / execPath;
         }
-        //execPath = execPath.parent_path().parent_path();
         execPath = execPath.parent_path();
         if (!fs::exists(execPath)) {
             cerr << "Erreur : Le chemin spécifié n'existe pas : " << execPath << endl;
@@ -36,34 +39,94 @@ std::string getProjectRootDir(const char* argv0) {
     }
 }
 
-// Créer k folds
-vector<vector<Image>> createKFolds(const vector<Image>& data, int k) {
-    vector<vector<Image>> folds(k);
-    vector<Image> shuffledData = data;
-    random_device rd;
-    mt19937 g(rd());
-    shuffle(shuffledData.begin(), shuffledData.end(), g);
 
-    for (size_t i = 0; i < shuffledData.size(); ++i) {
-        folds[i % k].push_back(shuffledData[i]);
-    }
-    return folds;
-}
+void processRepresentation(const string& representationDir, const string& confusionDir, const string& metricsDir, const string& prDataDir) {
+    string trainDir = representationDir + "/train2";
+    string testDir = representationDir + "/test2";
 
-// Nouvelle fonction pour stocker les scores de précision/rappel pour K=12
-void savePRData(const std::string& filename, const std::vector<int>& trueLabels, const std::vector<double>& confidenceScores) {
-    std::ofstream outFile(filename);
-    if (!outFile.is_open()) {
-        std::cerr << "Erreur : Impossible d'ouvrir le fichier pour sauvegarder les données PR." << std::endl;
+    if (!fs::exists(trainDir) || !fs::exists(testDir)) {
+        cerr << "Erreur : Les répertoires train/test sont manquants pour : " << representationDir << endl;
         return;
     }
-    outFile << "TrueLabel,ConfidenceScore\n";
-    for (size_t i = 0; i < trueLabels.size(); ++i) {
-        outFile << trueLabels[i] << "," << confidenceScores[i] << "\n";
+
+    DataCollection trainDataset, testDataset;
+    trainDataset.loadDatasetFromDirectory(trainDir);
+    testDataset.loadDatasetFromDirectory(testDir);
+
+    vector<Image> trainImages = trainDataset.getImages();
+    vector<Image> testImages = testDataset.getImages();
+
+    if (trainImages.empty() || testImages.empty()) {
+        cout << "Données insuffisantes pour la représentation : " << representationDir << ". Passé.\n";
+        return;
     }
-    outFile.close();
-    std::cout << "Données PR sauvegardées dans : " << filename << std::endl;
+
+    // Normalisation
+    trainDataset.computeNormalizationBounds(trainImages);
+    trainDataset.normalizeDataset(trainImages);
+    trainDataset.normalizeDataset(testImages);
+
+    // KNN
+    KNNClassifier knn(trainImages, 1, "euclidean");
+    ConfusionMatrix confusionMatrix(18);  // Changement pour 18 classes
+
+    for (const auto& testImage : testImages) {
+        int predictedLabel;
+        double confidenceScore;
+        tie(predictedLabel, confidenceScore) = knn.predictLabelWithConfidence(testImage);
+        confusionMatrix.addPrediction(testImage.getLabel(), predictedLabel);
+    }
+
+    string representationName = fs::path(representationDir).filename().string();
+    string confusionCSV = confusionDir + "/" + representationName + "_confusion_matrix.csv";
+    confusionMatrix.saveToCSV(confusionCSV);
+
+    string metricsCSV = metricsDir + "/" + representationName + "_metrics.csv";
+    Metrics::calculateMetricsFromCSV(confusionCSV, metricsCSV);
+
+    KNNClassifier knnWithFixedK(trainImages, 12, "euclidean");
+    vector<int> prTrueLabels;
+    vector<double> prConfidenceScores;
+
+    for (const auto& testImage : testImages) {
+        int predictedLabel;
+        double confidenceScore;
+        tie(predictedLabel, confidenceScore) = knnWithFixedK.predictLabelWithConfidence(testImage);
+        prTrueLabels.push_back(testImage.getLabel());
+        prConfidenceScores.push_back(confidenceScore);
+    }
+
+    string prFilename = prDataDir + "/" + representationName + "_pr_data.csv";
+    trainDataset.savePRData(prFilename, prTrueLabels, prConfidenceScores);
+
+    KMeans kmeans(10, 100, trainImages[0].getDescripteurs().size());
+    kmeans.fit(trainImages);
+
+    ConfusionMatrix confusionMatrixKMeans(18);  // Changement pour 18 classes
+    vector<int> prTrueLabelsKMeans;
+    vector<double> prConfidenceScoresKMeans;
+
+    for (const auto& testImage : testImages) {
+        int predictedLabel;
+        double confidenceScore;
+        tie(predictedLabel, confidenceScore) = kmeans.predictLabelWithConfidence(testImage);
+        confusionMatrixKMeans.addPrediction(testImage.getLabel(), predictedLabel);
+        prTrueLabelsKMeans.push_back(testImage.getLabel());
+        prConfidenceScoresKMeans.push_back(confidenceScore);
+    }
+
+    string confusionCSVKMeans = confusionDir + "/" + representationName + "_KMeans_confusion_matrix.csv";
+    confusionMatrixKMeans.saveToCSV(confusionCSVKMeans);
+
+    string metricsCSVKMeans = metricsDir + "/" + representationName + "_KMeans_metrics.csv";
+    Metrics::calculateMetricsFromCSV(confusionCSVKMeans, metricsCSVKMeans);
+
+    string prFilenameKMeans = prDataDir + "/" + representationName + "_KMeans_pr_data.csv";
+    trainDataset.savePRData(prFilenameKMeans, prTrueLabelsKMeans, prConfidenceScoresKMeans);
+
+    cout << "Traitement terminé pour : " << representationName << endl;
 }
+
 
 int main(int argc, char* argv[]) {
     if (argc < 1 || argv[0] == nullptr) {
@@ -86,148 +149,26 @@ int main(int argc, char* argv[]) {
         rootDir + "/=Zernike7"
     };
 
-    string confusionDir = "results/confusion_matrices";
-    string metricsDir = "results/metrics";
-    string prDataDir = "results/precision_recall_data";
+    // Configuration pour les 18 classes
+    string resultsBaseDir = "results/18_classes";
+    string confusionDir = resultsBaseDir + "/confusion_matrices";
+    string metricsDir = resultsBaseDir + "/metrics";
+    string prDataDir = resultsBaseDir + "/precision_recall_data";
 
-    if (!fs::exists(confusionDir)) {
-        fs::create_directories(confusionDir);
-    }
-    if (!fs::exists(metricsDir)) {
-        fs::create_directories(metricsDir);
-    }
-    if (!fs::exists(prDataDir)) {
-        fs::create_directories(prDataDir);
-    }
+    if (!fs::exists(confusionDir)) fs::create_directories(confusionDir);
+    if (!fs::exists(metricsDir)) fs::create_directories(metricsDir);
+    if (!fs::exists(prDataDir)) fs::create_directories(prDataDir);
 
     for (const auto& representationDir : representationDirs) {
-        if (!fs::exists(representationDir)) {
-            cerr << "Erreur : Le répertoire de représentation n'existe pas : " << representationDir << endl;
-            continue;
-        }
-
-        string trainDir = representationDir + "/train";
-        string testDir = representationDir + "/test";
-
-        if (!fs::exists(trainDir) || !fs::exists(testDir)) {
-            cerr << "Erreur : Les répertoires train/test sont manquants pour : " << representationDir << endl;
-            continue;
-        }
-
-        DataCollection trainDataset, testDataset;
-        trainDataset.loadDatasetFromDirectory(trainDir);
-        testDataset.loadDatasetFromDirectory(testDir);
-
-        vector<Image> trainImages = trainDataset.getImages();
-        vector<Image> testImages = testDataset.getImages();
-
-        if (trainImages.empty() || testImages.empty()) {
-            cout << "Données insuffisantes pour la représentation : " << representationDir << ". Passé.\n";
-            continue;
-        }
-
-        size_t numDescriptors = trainImages[0].getDescripteurs().size();
-        vector<double> minValues(numDescriptors, numeric_limits<double>::max());
-        vector<double> maxValues(numDescriptors, numeric_limits<double>::lowest());
-
-        for (const auto& img : trainImages) {
-            const auto& descripteurs = img.getDescripteurs();
-            for (size_t i = 0; i < descripteurs.size(); ++i) {
-                minValues[i] = min(minValues[i], descripteurs[i]);
-                maxValues[i] = max(maxValues[i], descripteurs[i]);
-            }
-        }
-
-        auto normalizeDescriptors = [&](vector<Image>& images) {
-            for (auto& img : images) {
-                vector<double> normalizedDescriptors(numDescriptors);
-                const auto& descripteurs = img.getDescripteurs();
-                for (size_t i = 0; i < descripteurs.size(); ++i) {
-                    if (maxValues[i] != minValues[i]) {
-                        normalizedDescriptors[i] = (descripteurs[i] - minValues[i]) / (maxValues[i] - minValues[i]);
-                    } else {
-                        normalizedDescriptors[i] = 0.0;
-                    }
-                }
-                img.setDescripteurs(normalizedDescriptors);
-            }
-        };
-
-        normalizeDescriptors(trainImages);
-        normalizeDescriptors(testImages);
-
-        KNNClassifier knn(trainImages, 1, "euclidean");
-        ConfusionMatrix confusionMatrix(10);
-
-        for (const auto& testImage : testImages) {
-            int predictedLabel;
-            double confidenceScore;
-            tie(predictedLabel, confidenceScore) = knn.predictLabelWithConfidence(testImage);
-            confusionMatrix.addPrediction(testImage.getLabel(), predictedLabel);
-        }
-
-        string representationName = fs::path(representationDir).filename().string();
-        string confusionCSV = confusionDir + "/" + representationName + "_confusion_matrix.csv";
-        confusionMatrix.saveToCSV(confusionCSV);
-
-        string metricsCSV = metricsDir + "/" + representationName + "_metrics.csv";
-        Metrics::calculateMetricsFromCSV(confusionCSV, metricsCSV);
-
-        int kFixed = 12;
-        KNNClassifier knnWithFixedK(trainImages, kFixed, "euclidean");
-        vector<int> prTrueLabels;
-        vector<double> prConfidenceScores;
-
-        for (const auto& testImage : testImages) {
-            int predictedLabel;
-            double confidenceScore;
-            tie(predictedLabel, confidenceScore) = knnWithFixedK.predictLabelWithConfidence(testImage);
-            prTrueLabels.push_back(testImage.getLabel());
-            prConfidenceScores.push_back(confidenceScore);
-        }
-
-        string prFilename = prDataDir + "/" + representationName + "_pr_data.csv";
-        savePRData(prFilename, prTrueLabels, prConfidenceScores);
-
-        // Initialisation et entraînement de K-Means
-        int numClusters = 10;
-        KMeans kmeans(numClusters, 100, numDescriptors);
-
-        // Entraîner le modèle K-Means
-        kmeans.fit(trainImages);
-
-        // Initialisation des variables pour la matrice de confusion et les données PR pour K-Means
-        ConfusionMatrix confusionMatrixKMeans(numClusters);
-        vector<int> prTrueLabelsKMeans;
-        vector<double> prConfidenceScoresKMeans;
-
-        // Prédictions sur les données de test
-        for (const auto& testImage : testImages) {
-            int predictedLabel;
-            double confidenceScore;
-            tie(predictedLabel, confidenceScore) = kmeans.predictLabelWithConfidence(testImage);
-
-            // Ajouter à la matrice de confusion
-            confusionMatrixKMeans.addPrediction(testImage.getLabel(), predictedLabel);
-
-            // Ajouter aux données PR
-            prTrueLabelsKMeans.push_back(testImage.getLabel());
-            prConfidenceScoresKMeans.push_back(confidenceScore);
-        }
-
-        // Sauvegarder les résultats pour K-Means
-        string confusionCSVKMeans = confusionDir + "/" + representationName + "_KMeans_confusion_matrix.csv";
-        confusionMatrixKMeans.saveToCSV(confusionCSVKMeans);
-
-        string metricsCSVKMeans = metricsDir + "/" + representationName + "_KMeans_metrics.csv";
-        Metrics::calculateMetricsFromCSV(confusionCSVKMeans, metricsCSVKMeans);
-
-        string prFilenameKMeans = prDataDir + "/" + representationName + "_KMeans_pr_data.csv";
-        savePRData(prFilenameKMeans, prTrueLabelsKMeans, prConfidenceScoresKMeans);
+        processRepresentation(representationDir, confusionDir, metricsDir, prDataDir);
     }
 
-    cout << "Toutes les matrices de confusion, métriques, et données PR ont été calculées et sauvegardées." << endl;
+    cout << "Toutes les matrices de confusion, métriques, et données PR ont été calculées et sauvegardées dans : " 
+         << resultsBaseDir << endl;
     return 0;
+
+
+
 
 
 
