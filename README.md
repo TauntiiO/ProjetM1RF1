@@ -5,6 +5,9 @@ Ce projet a été réalisé par Anaïs Kadic et Titouan Brierre
 ## Table des matières
 
 1. [Informations générales](#Informations-générales)
+2. [Technologies](#Techmologies)
+3. [Structure du projet](#Structure-du-projet)
+4. [Compilation et exécution](#Compilation-et-exécution)
 
 ## Informations générales
 
@@ -29,3 +32,48 @@ Ce projet permet de visualiser de manière détaillée les performances des algo
 ### Gestion de versions
 
 [Git](https://git-scm.com)
+
+## Structure du projet
+
+ - [src/classifier](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/classifier) : Contient l'implémentation des algorithmes K-means et KNN en C++. Avec , l'écriture des résultats (matrices de confusion, métriques et score de confiance) dans des csv.
+
+ - [src/dataRepo](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/dataRepo) : Contient l'imlémentation de tous les outils nécessaires pour la lecture des fichiers et la structuration des données.
+
+ - [src/evaluation](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/evaluation) : Dossier contenant les outils nécessaires au calcul des metriques des algorithmes.
+
+ - [src/main](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/main) : Contient le fichier main, il appelle les les classes déclarées dans les dossiers décrits ci-dessus pour importer les données, entrainer les algorithmes dessus, les tester, puis sauvegarder les résultats dans des csv.
+   
+ - [scripts/](https://github.com/TauntiiO/ProjetM1RF1/tree/main/scripts) : Contient les scripts Python utilisés pour générer les visualisations et analyser les résultats. Contient aussi un script pour préparer des dossiers avec les jeux d'entrainement et de test.
+
+ - [include/](https://github.com/TauntiiO/ProjetM1RF1/tree/main/include) : Contient les fichiers d'en-tête des classes de [src/](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/)
+   
+ - [results/](https://github.com/TauntiiO/ProjetM1RF1/tree/main/results) : Dossier de sortie contenant les matrices de confusion, les graphiques des métriques et les courbes PR.
+   
+ - [data/](https://github.com/TauntiiO/ProjetM1RF1/tree/main/data) : Contient les jeux de données d'entrée pour l'entraînement et les tests des modèles.
+
+## Compilation et exécution
+
+Pour compiler et exécuter le projet, suivez les étapes ci-dessous :
+
+1. Compiler le projet :
+
+ - Allez à la racine du projet.
+ - Tapez la commande suivante pour compiler le projet :
+```
+make
+```
+ - Cette commande va compiler les sources et créer l'exécutable.
+2. Exécuter le projet :
+
+ - Après la compilation, vous pouvez exécuter le projet avec la commande :
+```
+./project_metrics
+```
+3. Recompiler le projet :
+
+ - Si vous apportez des modifications aux fichiers source, il est recommandé de nettoyer les anciens fichiers compilés avant de recompiler.
+ - Utilisez la commande suivante pour nettoyer les fichiers précédemment compilés :
+```
+make clean
+```
+ - Puis, compilez à nouveau avec la commande make.
