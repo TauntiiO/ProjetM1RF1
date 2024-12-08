@@ -35,7 +35,7 @@ Ce projet permet de visualiser de manière détaillée les performances des algo
 
 ## Structure du projet
 
- - [src/classifier](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/classifier) : Contient l'implémentation des algorithmes K-means et KNN en C++. Avec , l'écriture des résultats (matrices de confusion, métriques et score de confiance) dans des csv.
+ - [src/classifier](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/classifier) : Contient l'implémentation des algorithmes K-means et KNN en C++.
 
  - [src/dataRepo](https://github.com/TauntiiO/ProjetM1RF1/tree/main/src/dataRepo) : Contient l'imlémentation de tous les outils nécessaires pour la lecture des fichiers et la structuration des données.
 
