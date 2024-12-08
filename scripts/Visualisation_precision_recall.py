@@ -3,10 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_curve, auc
 
-input_dir = "../results/precision_recall_data"  # Dossier des fichiers PR
-output_dir = "../results/Visualisations_PR"    # Dossier des visualisations
+base_dir = os.path.dirname(os.path.abspath(__file__))  # Répertoire du script actuel
+input_base_dir = os.path.join(base_dir, "../results")  # Répertoire parent des sous-dossiers
+output_base_dir = os.path.join(base_dir, "../results/Visualisations_PR")
 
-os.makedirs(output_dir, exist_ok=True)
+os.makedirs(output_base_dir, exist_ok=True)
 
 def plot_pr_curve_grouped(file_path, output_path):
     """
@@ -17,7 +18,7 @@ def plot_pr_curve_grouped(file_path, output_path):
         - output_path (str) : Pour sauvegarder la courbe générée.
     
     Sortie :
-        - None : Courbe sauvegardée .
+        - None : Courbe sauvegardée.
     """
     data = pd.read_csv(file_path)
     true_labels = data['TrueLabel']
@@ -51,11 +52,21 @@ def plot_pr_curve_grouped(file_path, output_path):
     plt.close()
     print(f"Courbe PR sauvegardée dans : {output_path}")
 
-for file_name in os.listdir(input_dir):
-    if file_name.endswith("_pr_data.csv"):
-        input_file_path = os.path.join(input_dir, file_name)
-        output_file_path = os.path.join(output_dir, file_name.replace("_pr_data.csv", "_pr_curve_grouped.png"))
-        
-        plot_pr_curve_grouped(input_file_path, output_file_path)
+# Parcours des sous-dossiers
+for sub_dir in os.listdir(input_base_dir):
+    # Chemin absolu du sous-dossier
+    input_dir = os.path.join(input_base_dir, sub_dir, "precision_recall_data")
+    if os.path.exists(input_dir) and os.path.isdir(input_dir):
+        # Crée un répertoire de sortie correspondant
+        output_dir = os.path.join(output_base_dir, sub_dir, "precision_recall_data")
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Traite les fichiers PR
+        for file_name in os.listdir(input_dir):
+            if file_name.endswith("_pr_data.csv"):
+                input_file_path = os.path.join(input_dir, file_name)
+                output_file_path = os.path.join(output_dir, file_name.replace("_pr_data.csv", "_pr_curve_grouped.png"))
+                
+                plot_pr_curve_grouped(input_file_path, output_file_path)
 
 print("Toutes les courbes PR groupées ont été générées.")

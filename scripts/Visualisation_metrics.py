@@ -2,10 +2,11 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-input_dir = "../results/metrics"  
-output_dir = "../results/Visualisations"  
+base_dir = os.path.dirname(os.path.abspath(__file__))  # Répertoire du script actuel
+input_base_dir = os.path.join(base_dir, "../results")  # Répertoire parent des sous-dossiers
+output_base_dir = os.path.join(base_dir, "../results/Visualisations")
 
-os.makedirs(output_dir, exist_ok=True)
+os.makedirs(output_base_dir, exist_ok=True)
 
 def visualize_metrics(file_path, output_path):
     """
@@ -13,7 +14,7 @@ def visualize_metrics(file_path, output_path):
 
     Entrée :
         - file_path (str) : Chemin CSV avec les métriques.
-        - output_path (str) : chemin pour sauvegarder le graphiqu.
+        - output_path (str) : chemin pour sauvegarder le graphique.
     
     Sortie :
         - None : Le graphique est sauvegardé.
@@ -42,11 +43,21 @@ def visualize_metrics(file_path, output_path):
     plt.close()
     print(f"Graphique sauvegardé dans : {output_path}")
 
-for file_name in os.listdir(input_dir):
-    if file_name.endswith("_metrics.csv"):
-        input_file_path = os.path.join(input_dir, file_name)
-        output_file_path = os.path.join(output_dir, file_name.replace("_metrics.csv", "_metrics.png"))
-        
-        visualize_metrics(input_file_path, output_file_path)
+# Parcours des sous-dossiers
+for sub_dir in os.listdir(input_base_dir):
+    # Chemin absolu du sous-dossier
+    input_dir = os.path.join(input_base_dir, sub_dir, "metrics")
+    if os.path.exists(input_dir) and os.path.isdir(input_dir):
+        # Crée un répertoire de sortie correspondant
+        output_dir = os.path.join(output_base_dir, sub_dir, "metrics")
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Traite les fichiers des métriques
+        for file_name in os.listdir(input_dir):
+            if file_name.endswith("_metrics.csv"):
+                input_file_path = os.path.join(input_dir, file_name)
+                output_file_path = os.path.join(output_dir, file_name.replace("_metrics.csv", "_metrics.png"))
+                
+                visualize_metrics(input_file_path, output_file_path)
 
 print("Tous les graphiques des métriques ont été générés.")
