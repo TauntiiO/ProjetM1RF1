@@ -60,15 +60,38 @@ metrics_combined_df["F1-Score"] = metrics_combined_df["F1-Score"].str.rstrip('%'
 # Liste des métriques à visualiser
 metrics_list = ["Precision", "Recall", "F1-Score"]
 
-# Générer un graphique par métrique
+# Générer des graphiques comparant les algorithmes
+for metric in metrics_list:
+    plt.figure(figsize=(14, 8))
+    sns.barplot(
+        data=metrics_combined_df,
+        x="ClassCount",
+        y=metric,
+        hue="Algorithm",  # Comparer les algorithmes
+        palette="muted"
+    )
+    plt.title(f"Comparaison de {metric} par algorithme et nombre de classes")
+    plt.xlabel("Nombre de Classes")
+    plt.ylabel(f"{metric} (%)")
+    plt.legend(title="Algorithme", loc="lower right")
+    plt.grid(axis="y")
+    plt.tight_layout()
+
+    # Sauvegarder le graphique
+    output_path = os.path.join(output_dir, f"comparison_{metric.lower()}_algorithm.png")
+    plt.savefig(output_path)
+    plt.close()
+
+    print(f"Graphique pour {metric} sauvegardé dans : {output_path}")
+
+# Générer des graphiques comparant les méthodes de représentation
 for metric in metrics_list:
     plt.figure(figsize=(16, 10))
     sns.barplot(
         data=metrics_combined_df,
         x="ClassCount",
         y=metric,
-        hue="Representation",
-        ci="sd",
+        hue="Representation",  # Comparer les méthodes de représentation
         palette="tab10"
     )
     plt.title(f"Comparaison de {metric} par méthode de représentation et nombre de classes")
