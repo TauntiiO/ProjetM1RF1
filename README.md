@@ -5,7 +5,7 @@ Ce projet a été réalisé par Anaïs Kadic et Titouan Brierre
 ## Table des matières
 
 1. [Informations générales](#Informations-générales)
-2. [Technologies](#Techmologies)
+2. [Technologies](#Technologies)
 3. [Structure du projet](#Structure-du-projet)
 4. [Compilation et exécution](#Compilation-et-exécution)
 
