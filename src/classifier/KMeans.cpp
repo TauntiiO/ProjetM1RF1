@@ -90,7 +90,7 @@ void KMeans::fit(const std::vector<Image>& images) {
 
 void KMeans::associateLabelsToCentroids(const std::vector<Image>& images, const std::vector<int>& assignments, const std::vector<std::vector<double>>& centroids) {
     // Associer chaque centroid au label qui est le plus fréquent parmi les images du cluster
-    std::unordered_map<int, std::unordered_map<int, int>> clusterLabelCount;  // Cluster -> (Label -> count)
+    std::unordered_map<int, std::unordered_map<int, int>> clusterLabelCount;
     for (size_t i = 0; i < images.size(); ++i) {
         int cluster = assignments[i];
         int label = images[i].getLabel();

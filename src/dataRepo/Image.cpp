@@ -5,21 +5,6 @@
 
 using namespace std;
 
-/**
- * Classe Image
- * 
- * Cette classe représente une image avec :
- * - des descripteurs,
- * - un label,
- * - un type de représentation (GFD, ART, Yang, etc.),
- * - et un chemin d'accès à l'image.
- * 
- * Elle fournit des méthodes pour :
- * - accéder aux descripteurs, au label, au type de représentation et le chemin de l'image,
- * - valider que les descripteurs correspondent au type attendu,
- * - comparer deux images entre elles,
- */
-
 Image::Image() 
     : descripteurs{}, label(0), representationType(""), imagePath("") {}
 

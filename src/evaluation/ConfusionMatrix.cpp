@@ -6,7 +6,7 @@ ConfusionMatrix::ConfusionMatrix(int numClasses)
     : numClasses(numClasses), matrix(numClasses, std::vector<int>(numClasses, 0)) {}
 
 void ConfusionMatrix::addPrediction(int trueLabel, int predictedLabel) {
-    matrix[trueLabel - 1][predictedLabel - 1]++; // Assuming labels start from 1
+    matrix[trueLabel - 1][predictedLabel - 1]++;
 }
 
 void ConfusionMatrix::printMatrix() const {
