@@ -31,7 +31,7 @@ Ce projet permet de visualiser de manière détaillée les performances des algo
 
 ### Gestion de versions
 
-[Git](https://git-scm.com)
+ - [Git](https://git-scm.com)
 
 ## Structure du projet
 
