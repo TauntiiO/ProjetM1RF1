@@ -21,6 +21,19 @@ for class_dir in class_dirs:
     for file_name in os.listdir(metrics_dir):
         if file_name.endswith("_metrics.csv"):
             algo = "KMeans" if "KMeans" in file_name else "KNN"  # Déterminer l'algorithme
+
+            # Identifier la méthode de représentation
+            if "ART" in file_name:
+                representation = "ART"
+            elif "GFD" in file_name:
+                representation = "GFD"
+            elif "Yang" in file_name:
+                representation = "Yang"
+            elif "Zernike7" in file_name:
+                representation = "Zernike7"
+            else:
+                representation = "Unknown"
+
             file_path = os.path.join(metrics_dir, file_name)
 
             # Charger les données de métriques
@@ -33,6 +46,7 @@ for class_dir in class_dirs:
             # Ajouter les colonnes pour le contexte
             metrics_df["Algorithm"] = algo
             metrics_df["ClassCount"] = int(class_dir.split("_")[0])  # 10 ou 18
+            metrics_df["Representation"] = representation
             metrics_data.append(metrics_df)
 
 # Concaténer toutes les données en un seul DataFrame
@@ -48,23 +62,24 @@ metrics_list = ["Precision", "Recall", "F1-Score"]
 
 # Générer un graphique par métrique
 for metric in metrics_list:
-    plt.figure(figsize=(14, 8))
+    plt.figure(figsize=(16, 10))
     sns.barplot(
         data=metrics_combined_df,
         x="ClassCount",
         y=metric,
-        hue="Algorithm",
-        ci="sd"
+        hue="Representation",
+        ci="sd",
+        palette="tab10"
     )
-    plt.title(f"Comparaison de {metric} par algorithme et nombre de classes")
+    plt.title(f"Comparaison de {metric} par méthode de représentation et nombre de classes")
     plt.xlabel("Nombre de Classes")
     plt.ylabel(f"{metric} (%)")
-    plt.legend(title="Algorithme", loc="lower right")
+    plt.legend(title="Méthode de Représentation", loc="lower right")
     plt.grid(axis="y")
     plt.tight_layout()
 
     # Sauvegarder le graphique
-    output_path = os.path.join(output_dir, f"comparison_{metric.lower()}.png")
+    output_path = os.path.join(output_dir, f"comparison_{metric.lower()}_representation.png")
     plt.savefig(output_path)
     plt.close()
 
