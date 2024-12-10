@@ -10,21 +10,16 @@ KMeans::KMeans(int numClusters, int numFeatures, int maxIterations, double toler
     : numClusters(numClusters), numFeatures(numFeatures), maxIterations(maxIterations), tolerance(tolerance) {}
 
 void KMeans::fit(const std::vector<Image>& images) {
-    // Séparer les images par leur type de représentation
     std::unordered_map<std::string, std::vector<Image>> imagesByRepresentation;
     for (const auto& image : images) {
         imagesByRepresentation[image.getRepresentationType()].push_back(image);
     }
-
-    // Entraîner KMeans sur chaque groupe d'images de la même représentation
     for (const auto& pair : imagesByRepresentation) {
         const std::string& representation = pair.first;
         const std::vector<Image>& repImages = pair.second;
 
         std::vector<std::vector<double>> centroids(numClusters, std::vector<double>(numFeatures, 0.0));
         std::vector<int> assignments(repImages.size(), -1);
-
-        // Initialisation aléatoire des centroids
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dist(0, repImages.size() - 1);
@@ -35,8 +30,6 @@ void KMeans::fit(const std::vector<Image>& images) {
         bool converged = false;
         for (int iteration = 0; iteration < maxIterations && !converged; ++iteration) {
             converged = true;
-
-            // Réassigner chaque image à son cluster le plus proche
             for (size_t i = 0; i < repImages.size(); ++i) {
                 const auto& features = repImages[i].getDescripteurs();
                 double minDistance = std::numeric_limits<double>::max();
@@ -80,10 +73,8 @@ void KMeans::fit(const std::vector<Image>& images) {
             centroids = newCentroids;
         }
 
-        // Associer les labels aux centroids
         associateLabelsToCentroids(repImages, assignments, centroids);
 
-        // Sauvegarder les centroids et les labels pour cette représentation
         centroidsByRepresentation[representation] = centroids;
     }
 }
@@ -126,8 +117,6 @@ std::pair<int, double> KMeans::predictLabelWithConfidence(const Image& image) co
     const auto& features = image.getDescripteurs();
     double minDistance = std::numeric_limits<double>::max();
     int closestCluster = -1;
-
-    // Trouver le centroid le plus proche
     for (int i = 0; i < numClusters; ++i) {
         double distance = calculateDistance(features, centroids[i]);
         if (distance < minDistance) {

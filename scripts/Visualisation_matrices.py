@@ -3,12 +3,11 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Répertoires de base
-base_dir = os.path.dirname(os.path.abspath(__file__))  # Répertoire du script actuel
-input_base_dir = os.path.join(base_dir, "../results")  # Répertoire parent des sous-dossiers
+
+base_dir = os.path.dirname(os.path.abspath(__file__)) 
+input_base_dir = os.path.join(base_dir, "../results")  
 output_base_dir = os.path.join(base_dir, "../results/Visualisations")
 
-# Créer le dossier de sortie pour Visualisations
 os.makedirs(output_base_dir, exist_ok=True)
 
 def visualize_confusion_matrix(file_path, output_path):
@@ -26,13 +25,12 @@ def visualize_confusion_matrix(file_path, output_path):
     plt.figure(figsize=(10, 8))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False)
     plt.title(f'Confusion Matrix - {representation_name}')
-    plt.ylabel('Predicted Label')  # Correction : afficher "Predicted Label" en ordonnée
-    plt.xlabel('True Label')       # Correction : afficher "True Label" en abscisse
+    plt.ylabel('Predicted Label')  
+    plt.xlabel('True Label')       
     plt.savefig(output_path)
     plt.close()
     print(f"Heatmap sauvegardée dans : {output_path}")
 
-# Parcourir les répertoires d'entrée pour les configurations
 for class_dir in ["10_classes", "18_classes"]:
     input_dir = os.path.join(input_base_dir, class_dir, "confusion_matrices")
     output_dir = os.path.join(output_base_dir, class_dir, "confusion_matrices")

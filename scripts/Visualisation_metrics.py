@@ -43,16 +43,12 @@ def visualize_metrics(file_path, output_path):
     plt.close()
     print(f"Graphique sauvegardé dans : {output_path}")
 
-# Parcours des sous-dossiers
+
 for sub_dir in os.listdir(input_base_dir):
-    # Chemin absolu du sous-dossier
     input_dir = os.path.join(input_base_dir, sub_dir, "metrics")
     if os.path.exists(input_dir) and os.path.isdir(input_dir):
-        # Crée un répertoire de sortie correspondant
         output_dir = os.path.join(output_base_dir, sub_dir, "metrics")
         os.makedirs(output_dir, exist_ok=True)
-
-        # Traite les fichiers des métriques
         for file_name in os.listdir(input_dir):
             if file_name.endswith("_metrics.csv"):
                 input_file_path = os.path.join(input_dir, file_name)

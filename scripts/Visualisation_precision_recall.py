@@ -3,8 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_curve, auc
 
-base_dir = os.path.dirname(os.path.abspath(__file__))  # Répertoire du script actuel
-input_base_dir = os.path.join(base_dir, "../results")  # Répertoire parent des sous-dossiers
+base_dir = os.path.dirname(os.path.abspath(__file__))
+input_base_dir = os.path.join(base_dir, "../results")  
 output_base_dir = os.path.join(base_dir, "../results/Visualisations_PR")
 
 os.makedirs(output_base_dir, exist_ok=True)
@@ -52,16 +52,12 @@ def plot_pr_curve_grouped(file_path, output_path):
     plt.close()
     print(f"Courbe PR sauvegardée dans : {output_path}")
 
-# Parcours des sous-dossiers
 for sub_dir in os.listdir(input_base_dir):
-    # Chemin absolu du sous-dossier
     input_dir = os.path.join(input_base_dir, sub_dir, "precision_recall_data")
     if os.path.exists(input_dir) and os.path.isdir(input_dir):
-        # Crée un répertoire de sortie correspondant
         output_dir = os.path.join(output_base_dir, sub_dir, "precision_recall_data")
         os.makedirs(output_dir, exist_ok=True)
 
-        # Traite les fichiers PR
         for file_name in os.listdir(input_dir):
             if file_name.endswith("_pr_data.csv"):
                 input_file_path = os.path.join(input_dir, file_name)
