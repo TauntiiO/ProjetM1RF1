@@ -68,7 +68,7 @@ void processRepresentation(const string& representationDir, const string& confus
 
     // KNN
     KNNClassifier knn(trainImages, 1, "euclidean");
-    ConfusionMatrix confusionMatrix(18);  // Changement pour 18 classes
+    ConfusionMatrix confusionMatrix(18);
 
     for (const auto& testImage : testImages) {
         int predictedLabel;
@@ -99,10 +99,11 @@ void processRepresentation(const string& representationDir, const string& confus
     string prFilename = prDataDir + "/" + representationName + "_pr_data.csv";
     trainDataset.savePRData(prFilename, prTrueLabels, prConfidenceScores);
 
+    // KMeans
     KMeans kmeans(10, 100, trainImages[0].getDescripteurs().size());
     kmeans.fit(trainImages);
 
-    ConfusionMatrix confusionMatrixKMeans(18);  // Changement pour 18 classes
+    ConfusionMatrix confusionMatrixKMeans(18);
     vector<int> prTrueLabelsKMeans;
     vector<double> prConfidenceScoresKMeans;
 
