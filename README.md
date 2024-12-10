@@ -5,7 +5,7 @@ Ce projet a été réalisé par Anaïs Kadic et Titouan Brierre
 ## Table des matières
 
 1. [Informations générales](#Informations-générales)
-2. [Technologies](#Techmologies)
+2. [Technologies](#Technologies)
 3. [Structure du projet](#Structure-du-projet)
 4. [Compilation et exécution](#Compilation-et-exécution)
 
@@ -31,7 +31,7 @@ Ce projet permet de visualiser de manière détaillée les performances des algo
 
 ### Gestion de versions
 
-[Git](https://git-scm.com)
+ - [Git](https://git-scm.com)
 
 ## Structure du projet
 
